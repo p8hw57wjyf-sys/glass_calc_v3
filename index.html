@@ -19,7 +19,7 @@
 
         .header-info { background: #e7f3ff; padding: 15px; border-radius: 8px; margin-bottom: 15px; }
         .info-row { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
-        .info-row div { flex: 1; min-width: 140px; }
+        .info-row div { flex: 1; min-width: 130px; }
         
         .global-box { background: #ffffff; padding: 12px; border-radius: 6px; border: 1px solid #b2d5ff; margin-top: 10px; }
         .global-box label { font-weight: bold; color: #1877f2; display: block; margin-bottom: 5px; }
@@ -64,7 +64,7 @@
                     <select id="globalSpacer" onchange="applyGlobalSettings()"></select>
                 </div>
                 <div>
-                    <small>حقن الغاز (Gaz):</small>
+                    <small>وضع الغاز (Gaz):</small>
                     <select id="globalGas" onchange="applyGlobalSettings()">
                         <option value="Avec Gaz">Avec Gaz (مع غاز)</option>
                         <option value="Sans Gaz">Sans Gaz (بدون غاز)</option>
@@ -88,9 +88,9 @@
                     <th style="width: 7%;">الكمية</th>
                     <th style="width: 16%;">الجهة 1 (الخارجية)</th>
                     <th style="width: 12%;">الفاصل (Spacer)</th>
-                    <th style="width: 12%;">الغاز (Gaz)</th>
+                    <th style="width: 13%;">الغاز (Gaz)</th>
                     <th style="width: 16%;">الجهة 2 (الداخلية)</th>
-                    <th style="width: 8%;">المحيط (م)</th>
+                    <th style="width: 7%;">المحيط (م)</th>
                     <th style="width: 5%;">حذف</th>
                 </tr>
             </thead>
@@ -115,7 +115,7 @@
 
         <hr style="border: 0.5px solid #ddd; margin: 10px 0;">
         
-        <strong style="display: block; margin-bottom: 8px;">تفصيل مساحة حقن الغاز (Gaz):</strong>
+        <strong style="display: block; margin-bottom: 8px;">تفصيل وضع الغاز (Gaz):</strong>
         <ul class="summary-list" id="gasDetails"></ul>
     </div>
 </div>
@@ -174,8 +174,8 @@
 
         row.innerHTML = `
             <td>${rowCount}</td>
-            <td><input type="number" step="any" class="input-height" value="${height}" placeholder="1200" oninput="updateRowPerimeter(this)"></td>
-            <td><input type="number" step="any" class="input-width" value="${width}" placeholder="800" oninput="updateRowPerimeter(this)"></td>
+            <td><input type="number" step="any" class="input-height" value="${height}" placeholder="مثال: 1200" oninput="updateRowPerimeter(this)"></td>
+            <td><input type="number" step="any" class="input-width" value="${width}" placeholder="مثال: 800" oninput="updateRowPerimeter(this)"></td>
             <td><input type="number" class="input-qty" value="${quantity}" placeholder="0" min="1" oninput="updateRowPerimeter(this)"></td>
             <td><select class="glass-side1">${createOptions(glassTypes, current1)}</select></td>
             <td><select class="spacer-type">${createOptions(spacerTypes, currentSp)}</select></td>
@@ -236,19 +236,16 @@
             const spacer = row.querySelector('.spacer-type').value;
             const gas = row.querySelector('.gas-option').value;
 
-            // مساحة قطعة الزجاج المزدوجة الواحدة بالمتر المربع
+            // مساحة قطعة الزجاج المزدوج بالمتر المربع
             const unitArea = (h / 1000) * (w / 1000) * q;
             // المحيط بالمتر الطولي
             const perimeterMeter = ((h + w) * 2 / 1000) * q;
 
-            // تجميع أمتار الزجاج (القطعة المزدوجة تتكون من لوحين)
             glassSummary[side1] = (glassSummary[side1] || 0) + unitArea;
             glassSummary[side2] = (glassSummary[side2] || 0) + unitArea;
 
-            // تجميع أمتار الفواصل (Spacer)
             spacerSummary[spacer] = (spacerSummary[spacer] || 0) + perimeterMeter;
 
-            // تجميع مساحة الغاز تلقائياً بناءً على مساحة القطعة
             gasSummary[gas] = (gasSummary[gas] || 0) + unitArea;
 
             grandTotalGlassArea += (unitArea * 2);
@@ -274,7 +271,7 @@
             spacerDetailsList.appendChild(li);
         }
 
-        // تفصيل الغاز
+        // تفصيل حالة الغاز
         const gasDetailsList = document.getElementById('gasDetails');
         gasDetailsList.innerHTML = '';
         for (const [gOpt, area] of Object.entries(gasSummary)) {
