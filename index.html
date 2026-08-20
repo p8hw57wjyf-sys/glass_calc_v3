@@ -52,7 +52,6 @@
             </div>
         </div>
 
-        <!-- تحديد الخيارات العامة للطلبية كاملة -->
         <div class="global-box">
             <label>الخيارات الافتراضية للطلبية كاملة:</label>
             <div class="info-row" style="margin-bottom:0;">
@@ -77,8 +76,8 @@
             <thead>
                 <tr>
                     <th style="width: 4%;">#</th>
-                    <th style="width: 12%;">الارتفاع (سم)</th>
-                    <th style="width: 12%;">العرض (سم)</th>
+                    <th style="width: 12%;">الارتفاع (مم)</th>
+                    <th style="width: 12%;">العرض (مم)</th>
                     <th style="width: 8%;">الكمية</th>
                     <th style="width: 18%;">الجهة 1 (الخارجية)</th>
                     <th style="width: 14%;">الفاصل (Spacer)</th>
@@ -135,7 +134,6 @@
         globalSpacer.innerHTML = createOptions(spacerTypes, "Spacer 6mm");
     }
 
-    // تغيير الخيارات العامة يطبق فوراً على جميع الأسطر
     function applyGlobalSettings() {
         const v1 = globalSide1.value;
         const v2 = globalSide2.value;
@@ -149,7 +147,8 @@
         });
     }
 
-    function addNewRow(height = '', width = '', quantity = 1) {
+    // تم تغيير القيمة الافتراضية للكمية لتكون فارغة '' بدلاً من 1
+    function addNewRow(height = '', width = '', quantity = '') {
         const rowCount = tableBody.rows.length + 1;
         const row = document.createElement('tr');
         
@@ -159,9 +158,9 @@
 
         row.innerHTML = `
             <td>${rowCount}</td>
-            <td><input type="number" step="any" class="input-height" value="${height}" placeholder="0" oninput="updateRowPerimeter(this)"></td>
-            <td><input type="number" step="any" class="input-width" value="${width}" placeholder="0" oninput="updateRowPerimeter(this)"></td>
-            <td><input type="number" class="input-qty" value="${quantity}" min="1" oninput="updateRowPerimeter(this)"></td>
+            <td><input type="number" step="any" class="input-height" value="${height}" placeholder="مثال: 1200" oninput="updateRowPerimeter(this)"></td>
+            <td><input type="number" step="any" class="input-width" value="${width}" placeholder="مثال: 800" oninput="updateRowPerimeter(this)"></td>
+            <td><input type="number" class="input-qty" value="${quantity}" placeholder="0" min="1" oninput="updateRowPerimeter(this)"></td>
             <td><select class="glass-side1">${createOptions(glassTypes, current1)}</select></td>
             <td><select class="spacer-type">${createOptions(spacerTypes, currentSp)}</select></td>
             <td><select class="glass-side2">${createOptions(glassTypes, current2)}</select></td>
@@ -178,8 +177,8 @@
         const w = parseFloat(row.querySelector('.input-width').value) || 0;
         const q = parseInt(row.querySelector('.input-qty').value) || 0;
 
-        const perimeter = ((h + w) * 2 / 100) * q;
-        row.querySelector('.row-perimeter').innerText = perimeter.toFixed(2);
+        const perimeterMeter = ((h + w) * 2 / 1000) * q;
+        row.querySelector('.row-perimeter').innerText = perimeterMeter.toFixed(2);
     }
 
     function removeRow(btn) {
@@ -213,8 +212,8 @@
             const side2 = row.querySelector('.glass-side2').value;
             const spacer = row.querySelector('.spacer-type').value;
 
-            const singleGlassArea = (h / 100) * (w / 100) * q;
-            const perimeterMeter = ((h + w) * 2 / 100) * q;
+            const singleGlassArea = (h / 1000) * (w / 1000) * q;
+            const perimeterMeter = ((h + w) * 2 / 1000) * q;
 
             glassSummary[side1] = (glassSummary[side1] || 0) + singleGlassArea;
             glassSummary[side2] = (glassSummary[side2] || 0) + singleGlassArea;
