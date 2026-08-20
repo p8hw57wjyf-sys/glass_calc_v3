@@ -12,6 +12,8 @@
         .btn { display: block; width: 100%; padding: 12px; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; text-align: center; }
         .btn-add { background: #42b72a; margin-top: 15px; }
         .btn-add:hover { background: #36a420; }
+        .btn-extra { background: #e0a800; margin-top: 10px; color: #000; }
+        .btn-extra:hover { background: #c69500; }
         .btn-calc { background: #1877f2; margin-top: 10px; }
         .btn-calc:hover { background: #166fe5; }
         .btn-danger { background: #dc3545; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; }
@@ -25,6 +27,9 @@
         
         .global-box { background: #ffffff; padding: 12px; border-radius: 6px; border: 1px solid #b2d5ff; margin-top: 10px; }
         .global-box label { font-weight: bold; color: #1877f2; display: block; margin-bottom: 5px; }
+
+        .extra-section { background: #fff8e1; padding: 15px; border-radius: 8px; border: 1px solid #ffe082; margin-top: 20px; }
+        .extra-section h3 { margin: 0 0 10px 0; color: #856404; font-size: 16px; }
 
         .table-responsive { overflow-x: auto; }
         table { width: 100%; border-collapse: collapse; margin-top: 15px; min-width: 900px; }
@@ -41,8 +46,9 @@
         .prices-section h3 { margin: 0 0 10px 0; color: #333; font-size: 16px; display: flex; justify-content: space-between; align-items: center; }
         .price-table { min-width: 100% !important; margin-top: 5px; }
         .price-table th, .price-table td { padding: 4px 6px; font-size: 13px; }
-        .price-input { width: 85px !important; padding: 4px !important; font-size: 13px !important; height: 28px; display: inline-block; }
+        .price-input { width: 80px !important; padding: 4px !important; font-size: 13px !important; height: 28px; display: inline-block; }
         .status-badge { font-weight: normal; padding: 2px 6px; background: #28a745; color: white; border-radius: 4px; font-size: 11px; }
+        .service-type-select { background: #fff3cd; border: 1px solid #ffeeba; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -59,6 +65,14 @@
             <div>
                 <label>التاريخ:</label>
                 <input type="text" id="orderDate" placeholder="التاريخ">
+            </div>
+            <div>
+                <label style="color: #856404; font-weight: bold;">نوع الخدمة للطلبية:</label>
+                <select id="serviceType" class="service-type-select">
+                    <option value="tous_fourni">Tous fourni (كل شيء من عندي)</option>
+                    <option value="prestation">Prestation (الزجاج من عند الزبون)</option>
+                    <option value="demi_prestation">Demi prestation (جهة زجاج من عندي)</option>
+                </select>
             </div>
         </div>
 
@@ -108,7 +122,29 @@
         </table>
     </div>
 
-    <button class="btn btn-add" onclick="addNewRow()">➕ إضافة مقاس جديد</button>
+    <button class="btn btn-add" onclick="addNewRow()">➕ إضافة مقاس جديد للطلبية</button>
+
+    <!-- قسم الزجاج المنفصل / المكسور / الشراء الإضافي -->
+    <div class="extra-section">
+        <h3>📦 قطع زجاج منفصلة إضافية (شراء أو تعويض زجاج مكسور):</h3>
+        <div class="table-responsive">
+            <table style="min-width: 100%;">
+                <thead>
+                    <tr>
+                        <th style="width: 5%;">#</th>
+                        <th>الارتفاع (مم)</th>
+                        <th>العرض (مم)</th>
+                        <th style="width: 10%;">الكمية</th>
+                        <th>نوع الزجاج المطلوبة</th>
+                        <th style="width: 8%;">حذف</th>
+                    </tr>
+                </thead>
+                <tbody id="extraGlassBody"></tbody>
+            </table>
+        </div>
+        <button class="btn btn-extra" onclick="addExtraGlassRow()">➕ إضافة قطعة زجاج منفصلة</button>
+    </div>
+
     <button class="btn btn-calc" onclick="calculateTotalArea()">📐 حساب المساحات والتكلفة الإجمالية</button>
 
     <div class="summary-box" id="summaryBox">
@@ -117,9 +153,14 @@
         
         <hr style="border: 0.5px solid #ddd; margin: 15px 0;">
         
-        <strong style="display: block; margin-bottom: 8px;">تفصيل أمتار وتكلفة الزجاج:</strong>
+        <strong style="display: block; margin-bottom: 8px;">تفصيل أمتار وتكلفة زجاج الطلبية:</strong>
         <ul class="summary-list" id="glassDetails"></ul>
         
+        <hr style="border: 0.5px solid #ddd; margin: 15px 0;">
+        
+        <strong style="display: block; margin-bottom: 8px;">تفصيل أمتار وتكلفة قطع الزجاج المنفصلة/الإضافية:</strong>
+        <ul class="summary-list" id="extraGlassDetails"></ul>
+
         <hr style="border: 0.5px solid #ddd; margin: 15px 0;">
         
         <strong style="display: block; margin-bottom: 8px;">تفصيل أمتار وتكلفة الفواصل (Spacer):</strong>
@@ -131,9 +172,10 @@
         <ul class="summary-list" id="gasDetails"></ul>
     </div>
 
+    <!-- قسم الأسعار -->
     <div class="prices-section">
         <h3>
-            <span>🏷️ قائمة الأسعار المعتمدة <span class="status-badge" id="saveStatus">💾 تحفظ تلقائيًا</span></span>
+            <span>🏷️ قائمة الأسعار المعتمدة حسب نوع الخدمة <span class="status-badge" id="saveStatus">💾 تحفظ تلقائيًا</span></span>
             <button class="btn btn-reset" onclick="resetPrices()">🔄 تصفير الأسعار</button>
         </h3>
         
@@ -142,8 +184,10 @@
                 <thead>
                     <tr>
                         <th style="text-align: right;">النوع / البيان</th>
-                        <th style="width: 100px;">الوحدة</th>
-                        <th style="width: 110px;">السعر</th>
+                        <th style="width: 80px;">الوحدة</th>
+                        <th>Tous fourni<br><small>(سعر كامل)</small></th>
+                        <th>Prestation<br><small>(الزبون وفر الزجاج)</small></th>
+                        <th>Demi prestation<br><small>(جهة من عندي)</small></th>
                     </tr>
                 </thead>
                 <tbody id="priceTableBody"></tbody>
@@ -164,20 +208,21 @@
 
     const spacerTypes = ["Spacer 6mm", "Spacer 8mm", "Spacer 10mm", "Spacer 12mm"];
 
-    let prices = JSON.parse(localStorage.getItem('glass_calculator_prices')) || {
-        glass: {},
-        spacer: {},
-        gas: { "Avec Gaz": 0, "Sans Gaz": 0 }
+    let prices = JSON.parse(localStorage.getItem('glass_calculator_prices_v2')) || {
+        tous_fourni: { glass: {}, spacer: {}, gas: { "Avec Gaz": 0 } },
+        prestation: { glass: {}, spacer: {}, gas: { "Avec Gaz": 0 } },
+        demi_prestation: { glass: {}, spacer: {}, gas: { "Avec Gaz": 0 } }
     };
 
     function savePricesToStorage() {
-        localStorage.setItem('glass_calculator_prices', JSON.stringify(prices));
+        localStorage.setItem('glass_calculator_prices_v2', JSON.stringify(prices));
         const status = document.getElementById('saveStatus');
         status.innerText = '✅ تم الحفظ!';
         setTimeout(() => { status.innerText = '💾 تحفظ تلقائيًا'; }, 1500);
     }
 
     const tableBody = document.getElementById('tableBody');
+    const extraGlassBody = document.getElementById('extraGlassBody');
     const globalSide1 = document.getElementById('globalSide1');
     const globalSide2 = document.getElementById('globalSide2');
     const globalSpacer = document.getElementById('globalSpacer');
@@ -188,23 +233,25 @@
         priceTbody.innerHTML = '';
 
         glassTypes.forEach(g => {
-            prices.glass[g] = prices.glass[g] || 0;
             const tr = document.createElement('tr');
             tr.innerHTML = `
                 <td style="text-align: right; font-weight: bold;">${g}</td>
                 <td>م²</td>
-                <td><input type="number" step="any" class="price-input" value="${prices.glass[g] || ''}" onchange="updatePrice('glass', '${g}', this.value)" placeholder="0.00"></td>
+                <td><input type="number" step="any" class="price-input" value="${prices.tous_fourni.glass[g] || ''}" onchange="updatePrice('tous_fourni', 'glass', '${g}', this.value)" placeholder="0.00"></td>
+                <td><input type="number" step="any" class="price-input" value="${prices.prestation.glass ? (prices.prestation.glass[g] || '') : ''}" onchange="updatePrice('prestation', 'glass', '${g}', this.value)" placeholder="0.00"></td>
+                <td><input type="number" step="any" class="price-input" value="${prices.demi_prestation.glass[g] || ''}" onchange="updatePrice('demi_prestation', 'glass', '${g}', this.value)" placeholder="0.00"></td>
             `;
             priceTbody.appendChild(tr);
         });
 
         spacerTypes.forEach(sp => {
-            prices.spacer[sp] = prices.spacer[sp] || 0;
             const tr = document.createElement('tr');
             tr.innerHTML = `
                 <td style="text-align: right; font-weight: bold;">${sp}</td>
                 <td>متر طولي</td>
-                <td><input type="number" step="any" class="price-input" value="${prices.spacer[sp] || ''}" onchange="updatePrice('spacer', '${sp}', this.value)" placeholder="0.00"></td>
+                <td><input type="number" step="any" class="price-input" value="${prices.tous_fourni.spacer[sp] || ''}" onchange="updatePrice('tous_fourni', 'spacer', '${sp}', this.value)" placeholder="0.00"></td>
+                <td><input type="number" step="any" class="price-input" value="${prices.prestation.spacer[sp] || ''}" onchange="updatePrice('prestation', 'spacer', '${sp}', this.value)" placeholder="0.00"></td>
+                <td><input type="number" step="any" class="price-input" value="${prices.demi_prestation.spacer[sp] || ''}" onchange="updatePrice('demi_prestation', 'spacer', '${sp}', this.value)" placeholder="0.00"></td>
             `;
             priceTbody.appendChild(tr);
         });
@@ -213,20 +260,27 @@
         trGas.innerHTML = `
             <td style="text-align: right; font-weight: bold;">حقن غاز الأرجون (Avec Gaz)</td>
             <td>م²</td>
-            <td><input type="number" step="any" class="price-input" value="${prices.gas['Avec Gaz'] || ''}" onchange="updatePrice('gas', 'Avec Gaz', this.value)" placeholder="0.00"></td>
+            <td><input type="number" step="any" class="price-input" value="${prices.tous_fourni.gas['Avec Gaz'] || ''}" onchange="updatePrice('tous_fourni', 'gas', 'Avec Gaz', this.value)" placeholder="0.00"></td>
+            <td><input type="number" step="any" class="price-input" value="${prices.prestation.gas['Avec Gaz'] || ''}" onchange="updatePrice('prestation', 'gas', 'Avec Gaz', this.value)" placeholder="0.00"></td>
+            <td><input type="number" step="any" class="price-input" value="${prices.demi_prestation.gas['Avec Gaz'] || ''}" onchange="updatePrice('demi_prestation', 'gas', 'Avec Gaz', this.value)" placeholder="0.00"></td>
         `;
         priceTbody.appendChild(trGas);
     }
 
-    function updatePrice(category, key, value) {
-        if (!prices[category]) prices[category] = {};
-        prices[category][key] = parseFloat(value) || 0;
+    function updatePrice(mode, category, key, value) {
+        if (!prices[mode]) prices[mode] = {};
+        if (!prices[mode][category]) prices[mode][category] = {};
+        prices[mode][category][key] = parseFloat(value) || 0;
         savePricesToStorage();
     }
 
     function resetPrices() {
         if (confirm('هل أنت تأكد من رغبتك في تصفير جميع الأسعار؟')) {
-            prices = { glass: {}, spacer: {}, gas: { "Avec Gaz": 0, "Sans Gaz": 0 } };
+            prices = {
+                tous_fourni: { glass: {}, spacer: {}, gas: { "Avec Gaz": 0 } },
+                prestation: { glass: {}, spacer: {}, gas: { "Avec Gaz": 0 } },
+                demi_prestation: { glass: {}, spacer: {}, gas: { "Avec Gaz": 0 } }
+            };
             savePricesToStorage();
             initPriceTable();
         }
@@ -287,6 +341,21 @@
         updateRowNumbers();
     }
 
+    function addExtraGlassRow() {
+        const rowCount = extraGlassBody.rows.length + 1;
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${rowCount}</td>
+            <td><input type="number" step="any" class="extra-height" placeholder="1200"></td>
+            <td><input type="number" step="any" class="extra-width" placeholder="800"></td>
+            <td><input type="number" class="extra-qty" value="1" min="1"></td>
+            <td><select class="extra-type">${createOptions(glassTypes, "Verre clair 4mm")}</select></td>
+            <td><button class="btn-danger" onclick="this.closest('tr').remove(); updateExtraRowNumbers();">✕</button></td>
+        `;
+        extraGlassBody.appendChild(row);
+        updateExtraRowNumbers();
+    }
+
     function updateRowPerimeter(element) {
         const row = element.closest('tr');
         const h = parseFloat(row.querySelector('.input-height').value) || 0;
@@ -307,21 +376,25 @@
     }
 
     function updateRowNumbers() {
-        Array.from(tableBody.rows).forEach((row, index) => {
-            row.cells[0].innerText = index + 1;
-        });
+        Array.from(tableBody.rows).forEach((row, index) => { row.cells[0].innerText = index + 1; });
+    }
+
+    function updateExtraRowNumbers() {
+        Array.from(extraGlassBody.rows).forEach((row, index) => { row.cells[0].innerText = index + 1; });
     }
 
     function calculateTotalArea() {
+        const serviceMode = document.getElementById('serviceType').value;
         let grandTotalGlassArea = 0;
         let grandTotalPrice = 0;
 
         const glassSummary = {};
+        const extraGlassSummary = {};
         const spacerSummary = {};
         const gasSummary = {};
 
+        // 1. حساب زجاج الطلبية
         const rows = tableBody.querySelectorAll('tr');
-
         rows.forEach(row => {
             const h = parseFloat(row.querySelector('.input-height').value) || 0;
             const w = parseFloat(row.querySelector('.input-width').value) || 0;
@@ -335,36 +408,75 @@
             const unitArea = (h / 1000) * (w / 1000) * q;
             const perimeterMeter = ((h + w) * 2 / 1000) * q;
 
-            glassSummary[side1] = (glassSummary[side1] || 0) + unitArea;
-            glassSummary[side2] = (glassSummary[side2] || 0) + unitArea;
+            if (serviceMode === 'tous_fourni') {
+                glassSummary[side1] = (glassSummary[side1] || 0) + unitArea;
+                glassSummary[side2] = (glassSummary[side2] || 0) + unitArea;
+            } else if (serviceMode === 'demi_prestation') {
+                glassSummary[side1] = (glassSummary[side1] || 0) + unitArea;
+            }
 
             spacerSummary[spacer] = (spacerSummary[spacer] || 0) + perimeterMeter;
-
             gasSummary[gas] = (gasSummary[gas] || 0) + unitArea;
 
             grandTotalGlassArea += (unitArea * 2);
         });
 
-        document.getElementById('totalAreaText').innerText = `إجمالي المساحة الفعلية للزجاج: ${grandTotalGlassArea.toFixed(2)} م²`;
+        // 2. حساب قطع الزجاج المنفصلة
+        const extraRows = extraGlassBody.querySelectorAll('tr');
+        extraRows.forEach(row => {
+            const h = parseFloat(row.querySelector('.extra-height').value) || 0;
+            const w = parseFloat(row.querySelector('.extra-width').value) || 0;
+            const q = parseInt(row.querySelector('.extra-qty').value) || 0;
+            const gType = row.querySelector('.extra-type').value;
 
-        // تفصيل وتكلفة الزجاج
+            const area = (h / 1000) * (w / 1000) * q;
+            extraGlassSummary[gType] = (extraGlassSummary[gType] || 0) + area;
+        });
+
+        document.getElementById('totalAreaText').innerText = `إجمالي المساحة الفعلية للزجاج المزدوج: ${grandTotalGlassArea.toFixed(2)} م²`;
+
+        // تفصيل زجاج الطلبية
         const glassDetailsList = document.getElementById('glassDetails');
         glassDetailsList.innerHTML = '';
-        for (const [type, area] of Object.entries(glassSummary)) {
-            const unitPrice = prices.glass ? (prices.glass[type] || 0) : 0;
-            const cost = area * unitPrice;
-            grandTotalPrice += cost;
+        if (serviceMode === 'prestation') {
+            glassDetailsList.innerHTML = '<li><span>الزجاج مقدّم من طرف الزبون (Prestation)</span> <strong>0.00</strong></li>';
+        } else {
+            const glassPrices = prices[serviceMode]?.glass || {};
+            for (const [type, area] of Object.entries(glassSummary)) {
+                const unitPrice = glassPrices[type] || 0;
+                const cost = area * unitPrice;
+                grandTotalPrice += cost;
 
-            const li = document.createElement('li');
-            li.innerHTML = `<span>${type} (${area.toFixed(2)} م²)</span> <strong>${cost.toFixed(2)}</strong>`;
-            glassDetailsList.appendChild(li);
+                const li = document.createElement('li');
+                li.innerHTML = `<span>${type} (${area.toFixed(2)} م²)</span> <strong>${cost.toFixed(2)}</strong>`;
+                glassDetailsList.appendChild(li);
+            }
         }
 
-        // تفصيل وتكلفة الفواصل
+        // تفصيل قطع الزجاج المنفصلة
+        const extraGlassDetailsList = document.getElementById('extraGlassDetails');
+        extraGlassDetailsList.innerHTML = '';
+        const currentModeGlassPrices = prices[serviceMode]?.glass || prices['tous_fourni']?.glass || {};
+        if (Object.keys(extraGlassSummary).length === 0) {
+            extraGlassDetailsList.innerHTML = '<li><span>لا توجد قطع زجاج منفصلة مضافة</span> <strong>0.00</strong></li>';
+        } else {
+            for (const [type, area] of Object.entries(extraGlassSummary)) {
+                const unitPrice = currentModeGlassPrices[type] || 0;
+                const cost = area * unitPrice;
+                grandTotalPrice += cost;
+
+                const li = document.createElement('li');
+                li.innerHTML = `<span>${type} (${area.toFixed(2)} م²)</span> <strong>${cost.toFixed(2)}</strong>`;
+                extraGlassDetailsList.appendChild(li);
+            }
+        }
+
+        // تفصيل الفواصل
         const spacerDetailsList = document.getElementById('spacerDetails');
         spacerDetailsList.innerHTML = '';
+        const spacerPrices = prices[serviceMode]?.spacer || {};
         for (const [sp, len] of Object.entries(spacerSummary)) {
-            const unitPrice = prices.spacer ? (prices.spacer[sp] || 0) : 0;
+            const unitPrice = spacerPrices[sp] || 0;
             const cost = len * unitPrice;
             grandTotalPrice += cost;
 
@@ -373,13 +485,14 @@
             spacerDetailsList.appendChild(li);
         }
 
-        // تفصيل وتكلفة الغاز
+        // تفصيل الغاز
         const gasDetailsList = document.getElementById('gasDetails');
         gasDetailsList.innerHTML = '';
+        const gasPrices = prices[serviceMode]?.gas || {};
         for (const [gOpt, area] of Object.entries(gasSummary)) {
             let unitPrice = 0;
             if (gOpt === "Avec Gaz") {
-                unitPrice = (prices.gas && prices.gas['Avec Gaz']) ? prices.gas['Avec Gaz'] : 0;
+                unitPrice = gasPrices['Avec Gaz'] || 0;
             }
             const cost = area * unitPrice;
             grandTotalPrice += cost;
