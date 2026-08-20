@@ -124,7 +124,7 @@
 
     <button class="btn btn-add" onclick="addNewRow()">➕ إضافة مقاس جديد للطلبية</button>
 
-    <!-- قسم الزجاج المنفصل / المكسور / الشراء الإضافي -->
+    <!-- قسم الزجاج المنفصل -->
     <div class="extra-section">
         <h3>📦 قطع زجاج منفصلة إضافية (شراء أو تعويض زجاج مكسور):</h3>
         <div class="table-responsive">
@@ -186,7 +186,7 @@
                         <th style="text-align: right;">النوع / البيان</th>
                         <th style="width: 80px;">الوحدة</th>
                         <th>Tous fourni<br><small>(سعر كامل)</small></th>
-                        <th>Prestation<br><small>(الزبون وفر الزجاج)</small></th>
+                        <th>Prestation<br><small>(سعر الزجاج إضافي)</small></th>
                         <th>Demi prestation<br><small>(جهة من عندي)</small></th>
                     </tr>
                 </thead>
@@ -238,7 +238,7 @@
                 <td style="text-align: right; font-weight: bold;">${g}</td>
                 <td>م²</td>
                 <td><input type="number" step="any" class="price-input" value="${prices.tous_fourni.glass[g] || ''}" onchange="updatePrice('tous_fourni', 'glass', '${g}', this.value)" placeholder="0.00"></td>
-                <td><input type="number" step="any" class="price-input" value="${prices.prestation.glass ? (prices.prestation.glass[g] || '') : ''}" onchange="updatePrice('prestation', 'glass', '${g}', this.value)" placeholder="0.00"></td>
+                <td><input type="number" step="any" class="price-input" value="${prices.prestation.glass ? (prices.prestation.glass[g] || '') : ''}" onchange="updatePrice('prestation', 'glass', '${g}', this.value)" placeholder="افتراضي"></td>
                 <td><input type="number" step="any" class="price-input" value="${prices.demi_prestation.glass[g] || ''}" onchange="updatePrice('demi_prestation', 'glass', '${g}', this.value)" placeholder="0.00"></td>
             `;
             priceTbody.appendChild(tr);
@@ -443,7 +443,7 @@
         } else {
             const glassPrices = prices[serviceMode]?.glass || {};
             for (const [type, area] of Object.entries(glassSummary)) {
-                const unitPrice = glassPrices[type] || 0;
+                const unitPrice = glassPrices[type] || prices.tous_fourni.glass[type] || 0;
                 const cost = area * unitPrice;
                 grandTotalPrice += cost;
 
@@ -453,15 +453,18 @@
             }
         }
 
-        // تفصيل قطع الزجاج المنفصلة
+        // تفصيل قطع الزجاج المنفصلة (يتم جلب سعر الزجاج من النظام المالي المحدد، وإذا كان غير محدد يجلب من Tous fourni)
         const extraGlassDetailsList = document.getElementById('extraGlassDetails');
         extraGlassDetailsList.innerHTML = '';
-        const currentModeGlassPrices = prices[serviceMode]?.glass || prices['tous_fourni']?.glass || {};
         if (Object.keys(extraGlassSummary).length === 0) {
             extraGlassDetailsList.innerHTML = '<li><span>لا توجد قطع زجاج منفصلة مضافة</span> <strong>0.00</strong></li>';
         } else {
             for (const [type, area] of Object.entries(extraGlassSummary)) {
-                const unitPrice = currentModeGlassPrices[type] || 0;
+                // جلب السعر المحدد للخدمة، وفي حال كان 0 أو غير معرف يأخذ سعر Tous fourni تلقائيًا
+                let unitPrice = (prices[serviceMode]?.glass && prices[serviceMode].glass[type]) 
+                    ? prices[serviceMode].glass[type] 
+                    : (prices.tous_fourni.glass[type] || 0);
+
                 const cost = area * unitPrice;
                 grandTotalPrice += cost;
 
@@ -476,7 +479,7 @@
         spacerDetailsList.innerHTML = '';
         const spacerPrices = prices[serviceMode]?.spacer || {};
         for (const [sp, len] of Object.entries(spacerSummary)) {
-            const unitPrice = spacerPrices[sp] || 0;
+            const unitPrice = spacerPrices[sp] || prices.tous_fourni.spacer[sp] || 0;
             const cost = len * unitPrice;
             grandTotalPrice += cost;
 
@@ -492,7 +495,7 @@
         for (const [gOpt, area] of Object.entries(gasSummary)) {
             let unitPrice = 0;
             if (gOpt === "Avec Gaz") {
-                unitPrice = gasPrices['Avec Gaz'] || 0;
+                unitPrice = gasPrices['Avec Gaz'] || prices.tous_fourni.gas['Avec Gaz'] || 0;
             }
             const cost = area * unitPrice;
             grandTotalPrice += cost;
