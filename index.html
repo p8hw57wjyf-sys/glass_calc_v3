@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>حاسبة وتفريغ طلبيات الزجاج المزدوج</title>
+    <!-- مكتبة Tesseract لقراءة الصور -->
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+    <style>
+        body { font-family: system-ui, sans-serif; padding: 20px; background: #f4f6f8; color: #333; }
+        .container { max-width: 600px; margin: auto; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        h2 { text-align: center; color: #1a73e8; }
+        .btn { display: block; width: 100%; padding: 12px; background: #1a73e8; color: white; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; text-align: center; margin-top: 10px; }
+        .btn:hover { background: #1557b0; }
+        input[type="file"] { display: none; }
+        #preview { max-width: 100%; margin-top: 15px; border-radius: 8px; display: none; }
+        #status { margin-top: 15px; font-weight: bold; color: #d93025; text-align: center; }
+        textarea { width: 100%; height: 150px; margin-top: 15px; padding: 10px; border: 1px solid #ccc; border-radius: 8px; box-sizing: border-box; font-size: 16px; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h2>تحويل ورقة الطلبية إلى نص</h2>
+
+    <!-- زر التقاط/اختيار الصورة -->
+    <label for="imageInput" class="btn">📸 صور الورقة أو اختر صورة</label>
+    <input type="file" id="imageInput" accept="image/*" capture="environment">
+
+    <img id="preview" alt="معاينة الصورة">
+    <div id="status"></div>
+
+    <h3>النص المستخرج:</h3>
+    <textarea id="output" placeholder="سيظهر النص المقروء من الورقة هنا..."></textarea>
+</div>
+
+<script>
+    const imageInput = document.getElementById('imageInput');
+    const preview = document.getElementById('preview');
+    const status = document.getElementById('status');
+    const output = document.getElementById('output');
+
+    imageInput.addEventListener('change', async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        // عرض معاينة الصورة
+        preview.src = URL.createObjectURL(file);
+        preview.style.display = 'block';
+        
+        status.innerText = '⏳ جاري قراءة الورقة وتحليل النص...';
+        output.value = '';
+
+        try {
+            // قراءة الصورة واستخراج النص (يدعم العربية والإسبانية/الإنجليزية للأرقام)
+            const worker = await Tesseract.createWorker('ara+eng');
+            const ret = await worker.recognize(file);
+            
+            output.value = ret.data.text;
+            status.innerText = '✅ تم استخراج النص بنجاح!';
+            await worker.terminate();
+        } catch (err) {
+            console.error(err);
+            status.innerText = '❌ حدث خطأ أثناء قراءة الصورة. حاول التقاط صورة أوضح.';
+        }
+    });
+</script>
+
+</body>
+</html>
