@@ -6,7 +6,7 @@
     <title>حاسبة طلبيات الزجاج المزدوج</title>
     <style>
         body { font-family: system-ui, sans-serif; padding: 15px; background: #f0f2f5; color: #1c1e21; }
-        .container { max-width: 700px; margin: auto; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .container { max-width: 900px; margin: auto; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
         h2 { text-align: center; color: #1877f2; margin-bottom: 20px; }
         .btn { display: block; width: 100%; padding: 12px; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; text-align: center; }
         .btn-add { background: #42b72a; margin-top: 15px; }
@@ -15,17 +15,20 @@
         .btn-calc:hover { background: #166fe5; }
         .btn-danger { background: #dc3545; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; }
         
-        input[type="text"], input[type="number"] { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; text-align: center; font-size: 15px; }
+        input[type="text"], input[type="number"], select { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-size: 14px; text-align: center; }
 
         .header-info { background: #e7f3ff; padding: 12px; border-radius: 6px; margin-bottom: 15px; display: flex; gap: 10px; flex-wrap: wrap; }
         .header-info div { flex: 1; min-width: 140px; }
 
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        .table-responsive { overflow-x: auto; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; min-width: 650px; }
         th, td { border: 1px solid #ddd; padding: 8px; text-align: center; }
         th { background-color: #f8f9fa; color: #333; }
         
         .summary-box { background: #f8f9fa; border: 2px dashed #1877f2; padding: 15px; border-radius: 8px; margin-top: 20px; display: none; }
-        .summary-item { font-size: 17px; font-weight: bold; margin: 8px 0; text-align: center; }
+        .summary-title { font-size: 18px; font-weight: bold; color: #1877f2; margin-bottom: 10px; text-align: center; }
+        .summary-list { list-style: none; padding: 0; margin: 0; }
+        .summary-list li { padding: 6px 0; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; font-size: 15px; }
     </style>
 </head>
 <body>
@@ -33,7 +36,6 @@
 <div class="container">
     <h2>حاسبة طلبيات الزجاج المزدوج</h2>
 
-    <!-- معلومات العميل والتاريخ -->
     <div class="header-info">
         <div>
             <label>اسم العميل:</label>
@@ -45,48 +47,64 @@
         </div>
     </div>
 
-    <!-- جدول الخانات المدخلة -->
-    <table>
-        <thead>
-            <tr>
-                <th style="width: 10%;">#</th>
-                <th style="width: 30%;">الارتفاع (سم)</th>
-                <th style="width: 30%;">العرض (سم)</th>
-                <th style="width: 20%;">الكمية</th>
-                <th style="width: 10%;">حذف</th>
-            </tr>
-        </thead>
-        <tbody id="tableBody">
-            <!-- الخانات المضافة -->
-        </tbody>
-    </table>
+    <div class="table-responsive">
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 5%;">#</th>
+                    <th style="width: 15%;">الارتفاع (سم)</th>
+                    <th style="width: 15%;">العرض (سم)</th>
+                    <th style="width: 10%;">الكمية</th>
+                    <th style="width: 22%;">الجهة 1 (الخارجية)</th>
+                    <th style="width: 22%;">الجهة 2 (الداخلية)</th>
+                    <th style="width: 10%;">حذف</th>
+                </tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+        </table>
+    </div>
 
     <button class="btn btn-add" onclick="addNewRow()">➕ إضافة مقاس جديد</button>
-    <button class="btn btn-calc" onclick="calculateTotalArea()">📐 حساب المساحة والإجمالي</button>
+    <button class="btn btn-calc" onclick="calculateTotalArea()">📐 حساب المساحات وتفصيل أنواع الزجاج</button>
 
     <div class="summary-box" id="summaryBox">
-        <div class="summary-item">
-            مساحة القطع المزدوجة (الفتحة): <span id="unitArea" style="color: #1877f2;">0</span> م²
-        </div>
-        <hr style="border: 0.5px solid #eee;">
-        <div class="summary-item" style="color: #d93025;">
-            إجمالي المساحة الفعلية للزجاج (لوحين): <span id="glassArea">0</span> م²
-        </div>
+        <div class="summary-title" id="totalAreaText"></div>
+        <hr style="border: 0.5px solid #ddd; margin: 10px 0;">
+        <strong style="display: block; margin-bottom: 8px;">تفصيل المساحات حسب نوع الزجاج:</strong>
+        <ul class="summary-list" id="glassDetails"></ul>
     </div>
 </div>
 
 <script>
+    // قائمة أنواع الزجاج المتاحة (4mm و 5mm)
+    const glassTypes = [
+        "Verre clair 4mm", "Sablé 4mm", "Stopsol bleu 4mm", "Stopsol clair 4mm", 
+        "Stopsol vert 4mm", "Stopsol marron 4mm", "Fumé marron 4mm", "Fumé noir 4mm", 
+        "Fumé bleu 4mm", "Fumé vert 4mm", "Delta 4mm",
+        "Verre clair 5mm", "Sablé 5mm", "Stopsol bleu 5mm", "Stopsol clair 5mm", 
+        "Stopsol vert 5mm", "Stopsol marron 5mm", "Fumé marron 5mm", "Fumé noir 5mm", 
+        "Fumé bleu 5mm", "Fumé vert 5mm", "Delta 5mm"
+    ];
+
     const tableBody = document.getElementById('tableBody');
+
+    // إنشاء خيارات القائمة المنسدلة للزجاج
+    function createGlassOptions() {
+        return glassTypes.map(type => `<option value="${type}">${type}</option>`).join('');
+    }
 
     function addNewRow(height = '', width = '', quantity = 1) {
         const rowCount = tableBody.rows.length + 1;
         const row = document.createElement('tr');
+        const options = createGlassOptions();
         
         row.innerHTML = `
             <td>${rowCount}</td>
             <td><input type="number" step="any" class="input-height" value="${height}" placeholder="0"></td>
             <td><input type="number" step="any" class="input-width" value="${width}" placeholder="0"></td>
             <td><input type="number" class="input-qty" value="${quantity}" min="1"></td>
+            <td><select class="glass-side1">${options}</select></td>
+            <td><select class="glass-side2">${options}</select></td>
             <td><button class="btn-danger" onclick="removeRow(this)">✕</button></td>
         `;
         tableBody.appendChild(row);
@@ -109,24 +127,45 @@
     }
 
     function calculateTotalArea() {
-        let totalUnitArea = 0;
+        let grandTotalGlassArea = 0;
+        const glassSummary = {};
+
         const rows = tableBody.querySelectorAll('tr');
 
         rows.forEach(row => {
             const h = parseFloat(row.querySelector('.input-height').value) || 0;
             const w = parseFloat(row.querySelector('.input-width').value) || 0;
             const q = parseInt(row.querySelector('.input-qty').value) || 0;
+            
+            const side1 = row.querySelector('.glass-side1').value;
+            const side2 = row.querySelector('.glass-side2').value;
 
-            // حساب مساحة القطعة الواحدة بالمتر المربع
-            const area = (h / 100) * (w / 100) * q;
-            totalUnitArea += area;
+            // مساحة اللوح الواحد لهذا المقاس
+            const singleGlassArea = (h / 100) * (w / 100) * q;
+
+            // إضافتها إلى نوع الجهة الأولى
+            glassSummary[side1] = (glassSummary[side1] || 0) + singleGlassArea;
+            
+            // إضافتها إلى نوع الجهة الثانية
+            glassSummary[side2] = (glassSummary[side2] || 0) + singleGlassArea;
+
+            // إجمالي الزجاج للوحين
+            grandTotalGlassArea += (singleGlassArea * 2);
         });
 
-        // مساحة الزجاج الصافي تعادل ضرب مساحة القطع في 2 (لوحين زجاج)
-        const totalGlassArea = totalUnitArea * 2;
+        // عرض النتيجة الإجمالية
+        document.getElementById('totalAreaText').innerText = `إجمالي المساحة الفعلية للزجاج: ${grandTotalGlassArea.toFixed(2)} م²`;
 
-        document.getElementById('unitArea').innerText = totalUnitArea.toFixed(2);
-        document.getElementById('glassArea').innerText = totalGlassArea.toFixed(2);
+        // تفصيل الأمتار حسب كل نوع زجاج
+        const glassDetailsList = document.getElementById('glassDetails');
+        glassDetailsList.innerHTML = '';
+
+        for (const [type, area] of Object.entries(glassSummary)) {
+            const li = document.createElement('li');
+            li.innerHTML = `<span>${type}</span> <strong>${area.toFixed(2)} م²</strong>`;
+            glassDetailsList.appendChild(li);
+        }
+
         document.getElementById('summaryBox').style.display = 'block';
     }
 
