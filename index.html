@@ -17,8 +17,12 @@
         
         input[type="text"], input[type="number"], select { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-size: 14px; text-align: center; }
 
-        .header-info { background: #e7f3ff; padding: 12px; border-radius: 6px; margin-bottom: 15px; display: flex; gap: 10px; flex-wrap: wrap; }
-        .header-info div { flex: 1; min-width: 140px; }
+        .header-info { background: #e7f3ff; padding: 15px; border-radius: 8px; margin-bottom: 15px; }
+        .info-row { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
+        .info-row div { flex: 1; min-width: 140px; }
+        
+        .global-glass-box { background: #ffffff; padding: 12px; border-radius: 6px; border: 1px solid #b2d5ff; margin-top: 10px; }
+        .global-glass-box label { font-weight: bold; color: #1877f2; display: block; margin-bottom: 5px; }
 
         .table-responsive { overflow-x: auto; }
         table { width: 100%; border-collapse: collapse; margin-top: 15px; min-width: 650px; }
@@ -37,13 +41,30 @@
     <h2>حاسبة طلبيات الزجاج المزدوج</h2>
 
     <div class="header-info">
-        <div>
-            <label>اسم العميل:</label>
-            <input type="text" id="clientName" placeholder="أدخل اسم العميل">
+        <div class="info-row">
+            <div>
+                <label>اسم العميل:</label>
+                <input type="text" id="clientName" placeholder="أدخل اسم العميل">
+            </div>
+            <div>
+                <label>التاريخ:</label>
+                <input type="text" id="orderDate" placeholder="التاريخ">
+            </div>
         </div>
-        <div>
-            <label>التاريخ:</label>
-            <input type="text" id="orderDate" placeholder="التاريخ">
+
+        <!-- تحديد الزجاج الافتراضي للطلبية كاملة -->
+        <div class="global-glass-box">
+            <label>نوع الزجاج الافتراضي للطلبية كاملة:</label>
+            <div class="info-row" style="margin-bottom:0;">
+                <div>
+                    <small>الجهة 1 (الخارجية):</small>
+                    <select id="globalSide1" onchange="applyGlobalGlass()"></select>
+                </div>
+                <div>
+                    <small>الجهة 2 (الداخلية):</small>
+                    <select id="globalSide2" onchange="applyGlobalGlass()"></select>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -76,7 +97,6 @@
 </div>
 
 <script>
-    // قائمة أنواع الزجاج المتاحة (4mm و 5mm)
     const glassTypes = [
         "Verre clair 4mm", "Sablé 4mm", "Stopsol bleu 4mm", "Stopsol clair 4mm", 
         "Stopsol vert 4mm", "Stopsol marron 4mm", "Fumé marron 4mm", "Fumé noir 4mm", 
@@ -87,24 +107,46 @@
     ];
 
     const tableBody = document.getElementById('tableBody');
+    const globalSide1 = document.getElementById('globalSide1');
+    const globalSide2 = document.getElementById('globalSide2');
 
-    // إنشاء خيارات القائمة المنسدلة للزجاج
-    function createGlassOptions() {
-        return glassTypes.map(type => `<option value="${type}">${type}</option>`).join('');
+    function createGlassOptions(selectedType) {
+        return glassTypes.map(type => `<option value="${type}" ${type === selectedType ? 'selected' : ''}>${type}</option>`).join('');
     }
 
+    // إعداد القوائم العامة في الأعلى
+    function setupGlobalOptions() {
+        globalSide1.innerHTML = createGlassOptions("Verre clair 4mm");
+        globalSide2.innerHTML = createGlassOptions("Verre clair 4mm");
+    }
+
+    // تطبيق اختيار الزجاج العام على كل الأسطر الحالية
+    function applyGlobalGlass() {
+        const val1 = globalSide1.value;
+        const val2 = globalSide2.value;
+
+        const rows = tableBody.querySelectorAll('tr');
+        rows.forEach(row => {
+            row.querySelector('.glass-side1').value = val1;
+            row.querySelector('.glass-side2').value = val2;
+        });
+    }
+
+    // إضافة صف جديد (يأخذ تلقائياً الخيار المحدد في الأعلى)
     function addNewRow(height = '', width = '', quantity = 1) {
         const rowCount = tableBody.rows.length + 1;
         const row = document.createElement('tr');
-        const options = createGlassOptions();
         
+        const currentGlobal1 = globalSide1.value || "Verre clair 4mm";
+        const currentGlobal2 = globalSide2.value || "Verre clair 4mm";
+
         row.innerHTML = `
             <td>${rowCount}</td>
             <td><input type="number" step="any" class="input-height" value="${height}" placeholder="0"></td>
             <td><input type="number" step="any" class="input-width" value="${width}" placeholder="0"></td>
             <td><input type="number" class="input-qty" value="${quantity}" min="1"></td>
-            <td><select class="glass-side1">${options}</select></td>
-            <td><select class="glass-side2">${options}</select></td>
+            <td><select class="glass-side1">${createGlassOptions(currentGlobal1)}</select></td>
+            <td><select class="glass-side2">${createGlassOptions(currentGlobal2)}</select></td>
             <td><button class="btn-danger" onclick="removeRow(this)">✕</button></td>
         `;
         tableBody.appendChild(row);
@@ -140,23 +182,16 @@
             const side1 = row.querySelector('.glass-side1').value;
             const side2 = row.querySelector('.glass-side2').value;
 
-            // مساحة اللوح الواحد لهذا المقاس
             const singleGlassArea = (h / 100) * (w / 100) * q;
 
-            // إضافتها إلى نوع الجهة الأولى
             glassSummary[side1] = (glassSummary[side1] || 0) + singleGlassArea;
-            
-            // إضافتها إلى نوع الجهة الثانية
             glassSummary[side2] = (glassSummary[side2] || 0) + singleGlassArea;
 
-            // إجمالي الزجاج للوحين
             grandTotalGlassArea += (singleGlassArea * 2);
         });
 
-        // عرض النتيجة الإجمالية
         document.getElementById('totalAreaText').innerText = `إجمالي المساحة الفعلية للزجاج: ${grandTotalGlassArea.toFixed(2)} م²`;
 
-        // تفصيل الأمتار حسب كل نوع زجاج
         const glassDetailsList = document.getElementById('glassDetails');
         glassDetailsList.innerHTML = '';
 
@@ -170,6 +205,7 @@
     }
 
     window.onload = () => {
+        setupGlobalOptions();
         addNewRow();
         const today = new Date().toISOString().split('T')[0];
         document.getElementById('orderDate').value = today;
