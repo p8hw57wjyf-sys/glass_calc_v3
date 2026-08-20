@@ -3,17 +3,27 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>حاسبة طلبيات الزجاج المزدوج</title>
+    <title>حاسبة طلبيات الزجاج المزدوج والأسعار</title>
     <style>
         body { font-family: system-ui, sans-serif; padding: 15px; background: #f0f2f5; color: #1c1e21; }
         .container { max-width: 1100px; margin: auto; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-        h2 { text-align: center; color: #1877f2; margin-bottom: 20px; }
+        h2 { text-align: center; color: #1877f2; margin-bottom: 15px; }
+        
+        /* Navigation Tabs */
+        .nav-tabs { display: flex; gap: 10px; margin-bottom: 20px; justify-content: center; }
+        .tab-btn { padding: 10px 20px; border: 1px solid #1877f2; background: #fff; color: #1877f2; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer; }
+        .tab-btn.active { background: #1877f2; color: white; }
+
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
         .btn { display: block; width: 100%; padding: 12px; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; text-align: center; }
         .btn-add { background: #42b72a; margin-top: 15px; }
         .btn-add:hover { background: #36a420; }
         .btn-calc { background: #1877f2; margin-top: 10px; }
         .btn-calc:hover { background: #166fe5; }
         .btn-danger { background: #dc3545; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; }
+        .btn-reset { background: #6c757d; width: auto; margin-top: 15px; float: left; }
         
         input[type="text"], input[type="number"], select { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-size: 14px; text-align: center; }
 
@@ -33,90 +43,127 @@
         .summary-title { font-size: 18px; font-weight: bold; color: #1877f2; margin-bottom: 10px; text-align: center; }
         .summary-list { list-style: none; padding: 0; margin: 0; }
         .summary-list li { padding: 6px 0; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; font-size: 15px; }
+        .total-price-box { font-size: 20px; font-weight: bold; color: #28a745; text-align: center; background: #e8f5e9; padding: 10px; border-radius: 6px; margin-top: 15px; }
+        
+        .status-badge { display: inline-block; padding: 4px 8px; background: #28a745; color: white; border-radius: 4px; font-size: 12px; float: left; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2>حاسبة طلبيات الزجاج المزدوج</h2>
+    <h2>نظام إدارة وتكلفة طلبيات الزجاج المزدوج</h2>
 
-    <div class="header-info">
-        <div class="info-row">
-            <div>
-                <label>اسم العميل:</label>
-                <input type="text" id="clientName" placeholder="أدخل اسم العميل">
+    <div class="nav-tabs">
+        <button class="tab-btn active" onclick="switchTab('calculator')">📐 حاسبة الطلبيات</button>
+        <button class="tab-btn" onclick="switchTab('prices')">🏷️ إدارة الأسعار <span style="font-size: 11px;">(محفوظة)</span></button>
+    </div>
+
+    <!-- TAB 1: CALCULATOR -->
+    <div id="tab-calculator" class="tab-content active">
+        <div class="header-info">
+            <div class="info-row">
+                <div>
+                    <label>اسم العميل:</label>
+                    <input type="text" id="clientName" placeholder="أدخل اسم العميل">
+                </div>
+                <div>
+                    <label>التاريخ:</label>
+                    <input type="text" id="orderDate" placeholder="التاريخ">
+                </div>
             </div>
-            <div>
-                <label>التاريخ:</label>
-                <input type="text" id="orderDate" placeholder="التاريخ">
+
+            <div class="global-box">
+                <label>الخيارات الافتراضية للطلبية كاملة:</label>
+                <div class="info-row" style="margin-bottom:0;">
+                    <div>
+                        <small>الجهة 1 (الخارجية):</small>
+                        <select id="globalSide1" onchange="applyGlobalSettings()"></select>
+                    </div>
+                    <div>
+                        <small>الفاصل العام (Spacer):</small>
+                        <select id="globalSpacer" onchange="applyGlobalSettings()"></select>
+                    </div>
+                    <div>
+                        <small>وضع الغاز (Gaz):</small>
+                        <select id="globalGas" onchange="applyGlobalSettings()">
+                            <option value="Avec Gaz">Avec Gaz (مع غاز)</option>
+                            <option value="Sans Gaz">Sans Gaz (بدون غاز)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <small>الجهة 2 (الداخلية):</small>
+                        <select id="globalSide2" onchange="applyGlobalSettings()"></select>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <div class="global-box">
-            <label>الخيارات الافتراضية للطلبية كاملة:</label>
-            <div class="info-row" style="margin-bottom:0;">
-                <div>
-                    <small>الجهة 1 (الخارجية):</small>
-                    <select id="globalSide1" onchange="applyGlobalSettings()"></select>
-                </div>
-                <div>
-                    <small>الفاصل العام (Spacer):</small>
-                    <select id="globalSpacer" onchange="applyGlobalSettings()"></select>
-                </div>
-                <div>
-                    <small>وضع الغاز (Gaz):</small>
-                    <select id="globalGas" onchange="applyGlobalSettings()">
-                        <option value="Avec Gaz">Avec Gaz (مع غاز)</option>
-                        <option value="Sans Gaz">Sans Gaz (بدون غاز)</option>
-                    </select>
-                </div>
-                <div>
-                    <small>الجهة 2 (الداخلية):</small>
-                    <select id="globalSide2" onchange="applyGlobalSettings()"></select>
-                </div>
-            </div>
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 4%;">#</th>
+                        <th style="width: 10%;">الارتفاع (مم)</th>
+                        <th style="width: 10%;">العرض (مم)</th>
+                        <th style="width: 7%;">الكمية</th>
+                        <th style="width: 16%;">الجهة 1 (الخارجية)</th>
+                        <th style="width: 12%;">الفاصل (Spacer)</th>
+                        <th style="width: 13%;">الغاز (Gaz)</th>
+                        <th style="width: 16%;">الجهة 2 (الداخلية)</th>
+                        <th style="width: 7%;">المحيط (م)</th>
+                        <th style="width: 5%;">حذف</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody"></tbody>
+            </table>
+        </div>
+
+        <button class="btn btn-add" onclick="addNewRow()">➕ إضافة مقاس جديد</button>
+        <button class="btn btn-calc" onclick="calculateTotalArea()">📐 حساب المساحات والتكلفة الإجمالية</button>
+
+        <div class="summary-box" id="summaryBox">
+            <div class="summary-title" id="totalAreaText"></div>
+            <div class="total-price-box" id="totalPriceText">السعر الإجمالي: 0.00 د.ج</div>
+            
+            <hr style="border: 0.5px solid #ddd; margin: 15px 0;">
+            
+            <strong style="display: block; margin-bottom: 8px;">تفصيل أمتار وتكلفة الزجاج:</strong>
+            <ul class="summary-list" id="glassDetails"></ul>
+            
+            <hr style="border: 0.5px solid #ddd; margin: 15px 0;">
+            
+            <strong style="display: block; margin-bottom: 8px;">تفصيل أمتار وتكلفة الفواصل (Spacer):</strong>
+            <ul class="summary-list" id="spacerDetails"></ul>
+
+            <hr style="border: 0.5px solid #ddd; margin: 15px 0;">
+            
+            <strong style="display: block; margin-bottom: 8px;">تفصيل حقن الغاز (Gaz):</strong>
+            <ul class="summary-list" id="gasDetails"></ul>
         </div>
     </div>
 
-    <div class="table-responsive">
-        <table>
-            <thead>
-                <tr>
-                    <th style="width: 4%;">#</th>
-                    <th style="width: 10%;">الارتفاع (مم)</th>
-                    <th style="width: 10%;">العرض (مم)</th>
-                    <th style="width: 7%;">الكمية</th>
-                    <th style="width: 16%;">الجهة 1 (الخارجية)</th>
-                    <th style="width: 12%;">الفاصل (Spacer)</th>
-                    <th style="width: 13%;">الغاز (Gaz)</th>
-                    <th style="width: 16%;">الجهة 2 (الداخلية)</th>
-                    <th style="width: 7%;">المحيط (م)</th>
-                    <th style="width: 5%;">حذف</th>
-                </tr>
-            </thead>
-            <tbody id="tableBody"></tbody>
-        </table>
-    </div>
-
-    <button class="btn btn-add" onclick="addNewRow()">➕ إضافة مقاس جديد</button>
-    <button class="btn btn-calc" onclick="calculateTotalArea()">📐 حساب المساحات والمحيط وتفصيل الطلبية</button>
-
-    <div class="summary-box" id="summaryBox">
-        <div class="summary-title" id="totalAreaText"></div>
-        <hr style="border: 0.5px solid #ddd; margin: 10px 0;">
+    <!-- TAB 2: PRICE MANAGEMENT -->
+    <div id="tab-prices" class="tab-content">
+        <div>
+            <span class="status-badge" id="saveStatus">💾 يتم الحفظ تلقائيًا</span>
+            <h3 style="margin: 0;">قائمة الأسعار المعتمدة</h3>
+        </div>
+        <p style="font-size: 14px; color: #666; margin-top: 5px;">أدخل الأسعار مرة واحدة فقط، وستظل محفوظة بشكل دائم في المتصفح:</p>
         
-        <strong style="display: block; margin-bottom: 8px;">تفصيل أمتار الزجاج حسب النوع:</strong>
-        <ul class="summary-list" id="glassDetails"></ul>
-        
-        <hr style="border: 0.5px solid #ddd; margin: 10px 0;">
-        
-        <strong style="display: block; margin-bottom: 8px;">تفصيل أمتار الفواصل (Spacer) الطولية:</strong>
-        <ul class="summary-list" id="spacerDetails"></ul>
-
-        <hr style="border: 0.5px solid #ddd; margin: 10px 0;">
-        
-        <strong style="display: block; margin-bottom: 8px;">تفصيل وضع الغاز (Gaz):</strong>
-        <ul class="summary-list" id="gasDetails"></ul>
+        <div class="table-responsive">
+            <table>
+                <thead>
+                    <tr>
+                        <th>البيان / النوع</th>
+                        <th>الوحدة</th>
+                        <th>السعر الفردي</th>
+                    </tr>
+                </thead>
+                <tbody id="priceTableBody"></tbody>
+            </table>
+        </div>
+        <button class="btn btn-reset" onclick="resetPrices()">🔄 إعادة ضبط الأسعار للصفر</button>
+        <div style="clear: both;"></div>
     </div>
 </div>
 
@@ -132,11 +179,89 @@
 
     const spacerTypes = ["Spacer 6mm", "Spacer 8mm", "Spacer 10mm", "Spacer 12mm"];
 
+    // تحميل الأسعار من LocalStorage أو استخدام القيم الافتراضية
+    let prices = JSON.parse(localStorage.getItem('glass_calculator_prices')) || {
+        glass: {},
+        spacer: {},
+        gas: { "Avec Gaz": 0, "Sans Gaz": 0 }
+    };
+
+    function savePricesToStorage() {
+        localStorage.setItem('glass_calculator_prices', JSON.stringify(prices));
+        const status = document.getElementById('saveStatus');
+        status.innerText = '✅ تم الحفظ!';
+        setTimeout(() => { status.innerText = '💾 يتم الحفظ تلقائيًا'; }, 1500);
+    }
+
     const tableBody = document.getElementById('tableBody');
     const globalSide1 = document.getElementById('globalSide1');
     const globalSide2 = document.getElementById('globalSide2');
     const globalSpacer = document.getElementById('globalSpacer');
     const globalGas = document.getElementById('globalGas');
+
+    function switchTab(tabName) {
+        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+
+        if(tabName === 'calculator') {
+            document.querySelectorAll('.tab-btn')[0].classList.add('active');
+            document.getElementById('tab-calculator').classList.add('active');
+        } else {
+            document.querySelectorAll('.tab-btn')[1].classList.add('active');
+            document.getElementById('tab-prices').classList.add('active');
+        }
+    }
+
+    function initPriceTable() {
+        const priceTbody = document.getElementById('priceTableBody');
+        priceTbody.innerHTML = '';
+
+        // أسعار الزجاج
+        glassTypes.forEach(g => {
+            prices.glass[g] = prices.glass[g] || 0;
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td style="text-align: right; font-weight: bold;">${g}</td>
+                <td>م² (متر مربع)</td>
+                <td><input type="number" step="any" value="${prices.glass[g]}" onchange="updatePrice('glass', '${g}', this.value)" placeholder="0.00"></td>
+            `;
+            priceTbody.appendChild(tr);
+        });
+
+        // أسعار الفواصل
+        spacerTypes.forEach(sp => {
+            prices.spacer[sp] = prices.spacer[sp] || 0;
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td style="text-align: right; font-weight: bold;">${sp}</td>
+                <td>متر طولي (m)</td>
+                <td><input type="number" step="any" value="${prices.spacer[sp]}" onchange="updatePrice('spacer', '${sp}', this.value)" placeholder="0.00"></td>
+            `;
+            priceTbody.appendChild(tr);
+        });
+
+        // سعر الغاز
+        const trGas = document.createElement('tr');
+        trGas.innerHTML = `
+            <td style="text-align: right; font-weight: bold;">حقن غاز الأرجون (Avec Gaz)</td>
+            <td>م² (متر مربع)</td>
+            <td><input type="number" step="any" value="${prices.gas['Avec Gaz'] || 0}" onchange="updatePrice('gas', 'Avec Gaz', this.value)" placeholder="0.00"></td>
+        `;
+        priceTbody.appendChild(trGas);
+    }
+
+    function updatePrice(category, key, value) {
+        prices[category][key] = parseFloat(value) || 0;
+        savePricesToStorage();
+    }
+
+    function resetPrices() {
+        if (confirm('هل أنت تأكد من رغبتك في إعادة ضبط جميع الأسعار إلى 0؟')) {
+            prices = { glass: {}, spacer: {}, gas: { "Avec Gaz": 0, "Sans Gaz": 0 } };
+            savePricesToStorage();
+            initPriceTable();
+        }
+    }
 
     function createOptions(array, selectedValue) {
         return array.map(item => `<option value="${item}" ${item === selectedValue ? 'selected' : ''}>${item}</option>`).join('');
@@ -174,8 +299,8 @@
 
         row.innerHTML = `
             <td>${rowCount}</td>
-            <td><input type="number" step="any" class="input-height" value="${height}" placeholder="مثال: 1200" oninput="updateRowPerimeter(this)"></td>
-            <td><input type="number" step="any" class="input-width" value="${width}" placeholder="مثال: 800" oninput="updateRowPerimeter(this)"></td>
+            <td><input type="number" step="any" class="input-height" value="${height}" placeholder="1200" oninput="updateRowPerimeter(this)"></td>
+            <td><input type="number" step="any" class="input-width" value="${width}" placeholder="800" oninput="updateRowPerimeter(this)"></td>
             <td><input type="number" class="input-qty" value="${quantity}" placeholder="0" min="1" oninput="updateRowPerimeter(this)"></td>
             <td><select class="glass-side1">${createOptions(glassTypes, current1)}</select></td>
             <td><select class="spacer-type">${createOptions(spacerTypes, currentSp)}</select></td>
@@ -220,6 +345,8 @@
 
     function calculateTotalArea() {
         let grandTotalGlassArea = 0;
+        let grandTotalPrice = 0;
+
         const glassSummary = {};
         const spacerSummary = {};
         const gasSummary = {};
@@ -236,9 +363,7 @@
             const spacer = row.querySelector('.spacer-type').value;
             const gas = row.querySelector('.gas-option').value;
 
-            // مساحة قطعة الزجاج المزدوج بالمتر المربع
             const unitArea = (h / 1000) * (w / 1000) * q;
-            // المحيط بالمتر الطولي
             const perimeterMeter = ((h + w) * 2 / 1000) * q;
 
             glassSummary[side1] = (glassSummary[side1] || 0) + unitArea;
@@ -253,38 +378,52 @@
 
         document.getElementById('totalAreaText').innerText = `إجمالي المساحة الفعلية للزجاج: ${grandTotalGlassArea.toFixed(2)} م²`;
 
-        // تفصيل الزجاج
+        // تفصيل وتكلفة الزجاج
         const glassDetailsList = document.getElementById('glassDetails');
         glassDetailsList.innerHTML = '';
         for (const [type, area] of Object.entries(glassSummary)) {
+            const unitPrice = prices.glass[type] || 0;
+            const cost = area * unitPrice;
+            grandTotalPrice += cost;
+
             const li = document.createElement('li');
-            li.innerHTML = `<span>${type}</span> <strong>${area.toFixed(2)} م²</strong>`;
+            li.innerHTML = `<span>${type} (${area.toFixed(2)} م²)</span> <strong>${cost.toFixed(2)}</strong>`;
             glassDetailsList.appendChild(li);
         }
 
-        // تفصيل الفواصل
+        // تفصيل وتكلفة الفواصل
         const spacerDetailsList = document.getElementById('spacerDetails');
         spacerDetailsList.innerHTML = '';
         for (const [sp, len] of Object.entries(spacerSummary)) {
+            const unitPrice = prices.spacer[sp] || 0;
+            const cost = len * unitPrice;
+            grandTotalPrice += cost;
+
             const li = document.createElement('li');
-            li.innerHTML = `<span>${sp}</span> <strong>${len.toFixed(2)} متر طولي (m)</strong>`;
+            li.innerHTML = `<span>${sp} (${len.toFixed(2)} م)</span> <strong>${cost.toFixed(2)}</strong>`;
             spacerDetailsList.appendChild(li);
         }
 
-        // تفصيل حالة الغاز
+        // تفصيل وتكلفة الغاز
         const gasDetailsList = document.getElementById('gasDetails');
         gasDetailsList.innerHTML = '';
         for (const [gOpt, area] of Object.entries(gasSummary)) {
+            const unitPrice = prices.gas[gOpt] || 0;
+            const cost = area * unitPrice;
+            grandTotalPrice += cost;
+
             const li = document.createElement('li');
-            li.innerHTML = `<span>${gOpt}</span> <strong>${area.toFixed(2)} م²</strong>`;
+            li.innerHTML = `<span>${gOpt} (${area.toFixed(2)} م²)</span> <strong>${cost.toFixed(2)}</strong>`;
             gasDetailsList.appendChild(li);
         }
 
+        document.getElementById('totalPriceText').innerText = `السعر الإجمالي للطلبية: ${grandTotalPrice.toFixed(2)}`;
         document.getElementById('summaryBox').style.display = 'block';
     }
 
     window.onload = () => {
         setupGlobalOptions();
+        initPriceTable();
         addNewRow();
         const today = new Date().toISOString().split('T')[0];
         document.getElementById('orderDate').value = today;
