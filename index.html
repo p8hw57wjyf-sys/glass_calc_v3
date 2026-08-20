@@ -37,7 +37,6 @@
         .summary-list li { padding: 6px 0; border-bottom: 1px solid #eee; display: flex; justify-content: space-between; font-size: 15px; }
         .total-price-box { font-size: 20px; font-weight: bold; color: #28a745; text-align: center; background: #e8f5e9; padding: 10px; border-radius: 6px; margin-top: 15px; }
         
-        /* قسم الأسعار المدمج المصغر */
         .prices-section { margin-top: 30px; border-top: 2px solid #e7f3ff; padding-top: 15px; }
         .prices-section h3 { margin: 0 0 10px 0; color: #333; font-size: 16px; display: flex; justify-content: space-between; align-items: center; }
         .price-table { min-width: 100% !important; margin-top: 5px; }
@@ -132,7 +131,6 @@
         <ul class="summary-list" id="gasDetails"></ul>
     </div>
 
-    <!-- قسم إدخال الأسعار المدمج أسفل الحاسبة مباشرة -->
     <div class="prices-section">
         <h3>
             <span>🏷️ قائمة الأسعار المعتمدة <span class="status-badge" id="saveStatus">💾 تحفظ تلقائيًا</span></span>
@@ -166,7 +164,6 @@
 
     const spacerTypes = ["Spacer 6mm", "Spacer 8mm", "Spacer 10mm", "Spacer 12mm"];
 
-    // تحميل الأسعار من LocalStorage
     let prices = JSON.parse(localStorage.getItem('glass_calculator_prices')) || {
         glass: {},
         spacer: {},
@@ -190,7 +187,6 @@
         const priceTbody = document.getElementById('priceTableBody');
         priceTbody.innerHTML = '';
 
-        // أسعار الزجاج
         glassTypes.forEach(g => {
             prices.glass[g] = prices.glass[g] || 0;
             const tr = document.createElement('tr');
@@ -202,7 +198,6 @@
             priceTbody.appendChild(tr);
         });
 
-        // أسعار الفواصل
         spacerTypes.forEach(sp => {
             prices.spacer[sp] = prices.spacer[sp] || 0;
             const tr = document.createElement('tr');
@@ -214,7 +209,6 @@
             priceTbody.appendChild(tr);
         });
 
-        // سعر الغاز
         const trGas = document.createElement('tr');
         trGas.innerHTML = `
             <td style="text-align: right; font-weight: bold;">حقن غاز الأرجون (Avec Gaz)</td>
@@ -225,6 +219,7 @@
     }
 
     function updatePrice(category, key, value) {
+        if (!prices[category]) prices[category] = {};
         prices[category][key] = parseFloat(value) || 0;
         savePricesToStorage();
     }
@@ -356,7 +351,7 @@
         const glassDetailsList = document.getElementById('glassDetails');
         glassDetailsList.innerHTML = '';
         for (const [type, area] of Object.entries(glassSummary)) {
-            const unitPrice = prices.glass[type] || 0;
+            const unitPrice = prices.glass ? (prices.glass[type] || 0) : 0;
             const cost = area * unitPrice;
             grandTotalPrice += cost;
 
@@ -369,7 +364,7 @@
         const spacerDetailsList = document.getElementById('spacerDetails');
         spacerDetailsList.innerHTML = '';
         for (const [sp, len] of Object.entries(spacerSummary)) {
-            const unitPrice = prices.spacer[sp] || 0;
+            const unitPrice = prices.spacer ? (prices.spacer[sp] || 0) : 0;
             const cost = len * unitPrice;
             grandTotalPrice += cost;
 
@@ -382,7 +377,10 @@
         const gasDetailsList = document.getElementById('gasDetails');
         gasDetailsList.innerHTML = '';
         for (const [gOpt, area] of Object.entries(gasSummary)) {
-            const unitPrice = prices.gas[gOpt] || 0;
+            let unitPrice = 0;
+            if (gOpt === "Avec Gaz") {
+                unitPrice = (prices.gas && prices.gas['Avec Gaz']) ? prices.gas['Avec Gaz'] : 0;
+            }
             const cost = area * unitPrice;
             grandTotalPrice += cost;
 
