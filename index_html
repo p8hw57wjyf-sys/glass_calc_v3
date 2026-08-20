@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تطبيق حساب Double Vitrage - الحفظ التلقائي</title>
+    <style>
+        body { font-family: system-ui, -apple-system, sans-serif; background: #f8fafc; padding: 15px; color: #1e293b; margin: 0; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        .card { background: white; padding: 20px; border-radius: 12px; margin-bottom: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        .header-flex { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px; }
+        h1, h2, h3 { color: #2563eb; margin: 0 0 10px 0; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 13px; }
+        th, td { border: 1px solid #cbd5e1; padding: 6px; text-align: center; }
+        th { background: #f1f5f9; }
+        input, select { padding: 5px; border: 1px solid #cbd5e1; border-radius: 4px; text-align: center; width: 90%; font-size: 13px; }
+        .btn { background: #2563eb; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: bold; }
+        .btn-success { background: #16a34a; }
+        .btn-settings { background: #475569; }
+        .btn-danger { background: #dc2626; padding: 6px 12px; }
+        .btn-warning { background: #d97706; padding: 8px 16px; }
+        .summary-box { background: #e0f2fe; padding: 15px; border-radius: 8px; margin-top: 15px; font-weight: bold; border-right: 4px solid #0284c7; }
+        
+        .modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; justify-content: center; align-items: center; }
+        .modal-content { background: white; width: 90%; max-width: 750px; max-height: 85vh; overflow-y: auto; padding: 20px; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; margin-bottom: 15px; }
+        .close-btn { cursor: pointer; font-size: 24px; font-weight: bold; color: #64748b; }
+
+        @media print {
+            .no-print { display: none !important; }
+            .card { box-shadow: none; border: none; padding: 0; }
+            body { background: white; padding: 0; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="card no-print header-flex">
+        <h1>حاسبة طلبات Double Vitrage</h1>
+        <div>
+            <button class="btn btn-settings" onclick="openModal()">⚙️ تعديل الأسعار والمواد</button>
+            <button class="btn" onclick="addNewRow()">+ إضافة مقاس جديد</button>
+            <button class="btn btn-warning" onclick="resetOrder()">🗑️ تصفير الطلبية</button>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="header-flex" style="margin-bottom: 15px;">
+            <h2>فاتورة الطلبية</h2>
+            <div>
+                <label>الزبون: <input type="text" id="clientName" oninput="saveOrderData()" style="width: 140px; display:inline-block;"></label>
+                <label>التاريخ: <input type="text" id="orderDate" oninput="saveOrderData()" style="width: 110px; display:inline-block;"></label>
+            </div>
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>الارتفاع</th>
+                    <th>العرض</th>
+                    <th>الكمية</th>
+                    <th>الوجه الأول (Verre 1)</th>
+                    <th>الوجه الثاني (Verre 2)</th>
+                    <th>الـ Spacer</th>
+                    <th>الـ Baguette</th>
+                    <th>التقسيم (ط/ع)</th>
+                    <th>الوردة (Rose)</th>
+                    <th>العدد</th>
+                    <th class="no-print">حذف</th>
+                </tr>
+            </thead>
+            <tbody id="itemsTableBody"></tbody>
+        </table>
+
+        <div class="summary-box" id="summaryBox"></div>
+
+        <div style="margin-top: 15px;" class="no-print">
+            <button class="btn btn-success" onclick="window.print()">🖨️ طباعة الفاتورة للزبون</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal" id="settingsModal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>⚙️ لوحة إعدادات الأسعار والمواد</h3>
+            <span class="close-btn" onclick="closeModal()">&times;</span>
+        </div>
+
+        <h4>1. أسعار الزجاج ($m^2$)</h4>
+        <table id="glassTable">
+            <thead><tr><th>نوع الزجاج</th><th>السعر ($m^2$)</th><th>حذف</th></tr></thead>
+            <tbody></tbody>
+        </table>
+        <button class="btn" onclick="addSettingRow('glassData', {name:'', price:0})">+ إضافة زجاج</button>
+
+        <h4>2. أسعار الباقيط - Baguette (لكل متر طولي)</h4>
+        <table id="baguetteTable">
+            <thead><tr><th>النوع واللون</th><th>السعر (لكل متر)</th><th>حذف</th></tr></thead>
+            <tbody></tbody>
+        </table>
+        <button class="btn" onclick="addSettingRow('baguetteData', {name:'', price:0})">+ إضافة باقيط</button>
+
+        <h4>3. أسعار الوردة - Rose (للقطعة الواحدة)</h4>
+        <table id="roseTable">
+            <thead><tr><th>النوع واللون</th><th>سعر القطعة</th><th>حذف</th></tr></thead>
+            <tbody></tbody>
+        </table>
+        <button class="btn" onclick="addSettingRow('roseData', {name:'', price:0})">+ إضافة وردة</button>
+
+        <h4>4. السعر الموحد للـ Spacer</h4>
+        <div style="background: #f1f5f9; padding: 10px; border-radius: 6px; margin-bottom: 15px;">
+            <label>سعر المتر الطولي للفاصل (Spacer): </label>
+            <input type="number" id="modalSpacerPrice" style="width: 120px;">
+        </div>
+
+        <div style="text-align: left; margin-top: 20px;">
+            <button class="btn btn-success" onclick="saveSettings()">💾 حفظ التغييرات والأسعار</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const defaultGlass = [
+        "Verre clair 4mm", "Verre stop sol bleu 4mm", "Verre stop sol marron 4mm", "Verre delta 4mm", "Verre sablé 4mm", 
+        "Verre stop sol clair 4mm", "Verre fumé bleu 4mm", "Verre fumé noir 4mm", "Verre fumé marron 4mm", "Verre stop sol vert 4mm", "Verre fumé vert 4mm",
+        "Verre clair 5mm", "Verre stop sol bleu 5mm", "Verre stop sol marron 5mm", "Verre delta 5mm", "Verre sablé 5mm", 
+        "Verre stop sol clair 5mm", "Verre fumé bleu 5mm", "Verre fumé noir 5mm", "Verre fumé marron 5mm", "Verre stop sol vert 5mm", "Verre fumé vert 5mm"
+    ].map(name => ({ name, price: 0 }));
+
+    const defaultBaguette = [
+        "Baguette 8/18 Blanc", "Baguette 8/18 Gris", "Baguette 8/18 Chromé", "Baguette 8/18 Dorée", "Baguette 8/18 Gris Souris",
+        "Baguette 8/10 Blanc", "Baguette 8/10 Gris", "Baguette 8/10 Chromé", "Baguette 8/10 Dorée", "Baguette 8/10 Gris Souris"
+    ].map(name => ({ name, price: 0 }));
+
+    const defaultRose = [
+        "Rose 8/18 Blanc", "Rose 8/18 Gris", "Rose 8/18 Chromé", "Rose 8/18 Dorée", "Rose 8/18 Gris Souris",
+        "Rose 8/10 Blanc", "Rose 8/10 Gris", "Rose 8/10 Chromé", "Rose 8/10 Dorée", "Rose 8/10 Gris Souris"
+    ].map(name => ({ name, price: 0 }));
+
+    const spacerOptions = [
+        { name: "Spacer 6mm" }, { name: "Spacer 8mm" }, { name: "Spacer 10mm" }, { name: "Spacer 12mm" }, { name: "Spacer 14mm" }
+    ];
+
+    // استرجاع الأسعار أو استخدام الافتراضية
+    let glassData = JSON.parse(localStorage.getItem('glassData')) || defaultGlass;
+    let baguetteData = JSON.parse(localStorage.getItem('baguetteData')) || defaultBaguette;
+    let roseData = JSON.parse(localStorage.getItem('roseData')) || defaultRose;
+    let spacerUnitPrice = parseFloat(localStorage.getItem('spacerUnitPrice')) || 0;
+
+    // استرجاع بيانات الطلبية المعلقة إن وجدت
+    const defaultItem = { height: 100, width: 100, qty: 1, v1: glassData[0]?.name||'', v2: glassData[0]?.name||'', spacer: 'Spacer 10mm', bag: 'بدون', bagH: 0, bagV: 0, rose: 'بدون', roseQty: 0 };
+    let items = JSON.parse(localStorage.getItem('currentOrderItems')) || [ defaultItem ];
+
+    // تحميل اسم الزبون والتاريخ
+    document.getElementById('clientName').value = localStorage.getItem('clientName') || 'BOUCHAIR';
+    document.getElementById('orderDate').value = localStorage.getItem('orderDate') || '20/08/2026';
+
+    function saveOrderData() {
+        localStorage.setItem('currentOrderItems', JSON.stringify(items));
+        localStorage.setItem('clientName', document.getElementById('clientName').value);
+        localStorage.setItem('orderDate', document.getElementById('orderDate').value);
+    }
+
+    function renderTable() {
+        const tbody = document.getElementById('itemsTableBody');
+        tbody.innerHTML = '';
+
+        let totalM2 = 0;
+        let totalSpacerM = 0;
+        let totalBaguetteM = 0;
+        let totalRoseCount = 0;
+        let totalPrice = 0;
+
+        items.forEach((item, i) => {
+            const m2PerPiece = (item.height * item.width) / 10000;
+            const itemM2 = m2PerPiece * item.qty;
+            const spacerM = (((item.height + item.width) * 2) / 100) * item.qty;
+            
+            let baguetteM = 0;
+            if (item.bag && item.bag !== 'بدون') {
+                const linesLength = (item.bagH * item.height) + (item.bagV * item.width);
+                baguetteM = (linesLength / 100) * item.qty;
+            }
+
+            totalM2 += itemM2;
+            totalSpacerM += spacerM;
+            totalBaguetteM += baguetteM;
+            totalRoseCount += (item.roseQty || 0) * item.qty;
+
+            const pV1 = glassData.find(g => g.name === item.v1)?.price || 0;
+            const pV2 = glassData.find(g => g.name === item.v2)?.price || 0;
+            const pBag = baguetteData.find(b => b.name === item.bag)?.price || 0;
+            const pRose = roseData.find(r => r.name === item.rose)?.price || 0;
+
+            const lineGlassCost = itemM2 * (pV1 + pV2);
+            const lineSpacerCost = spacerM * spacerUnitPrice;
+            const lineBagCost = baguetteM * pBag;
+            const lineRoseCost = (item.roseQty || 0) * item.qty * pRose;
+
+            totalPrice += (lineGlassCost + lineSpacerCost + lineBagCost + lineRoseCost);
+
+            tbody.innerHTML += `<tr>
+                <td><input type="number" value="${item.height}" onchange="updateItem(${i}, 'height', this.value)"></td>
+                <td><input type="number" value="${item.width}" onchange="updateItem(${i}, 'width', this.value)"></td>
+                <td><input type="number" value="${item.qty}" onchange="updateItem(${i}, 'qty', this.value)"></td>
+                <td>${buildSelect(glassData, item.v1, i, 'v1')}</td>
+                <td>${buildSelect(glassData, item.v2, i, 'v2')}</td>
+                <td>${buildSelect(spacerOptions, item.spacer, i, 'spacer')}</td>
+                <td>${buildSelect([{name:'بدون'}, ...baguetteData], item.bag, i, 'bag')}</td>
+                <td>
+                    <input type="number" value="${item.bagH}" style="width:25px" onchange="updateItem(${i}, 'bagH', this.value)"> / 
+                    <input type="number" value="${item.bagV}" style="width:25px" onchange="updateItem(${i}, 'bagV', this.value)">
+                </td>
+                <td>${buildSelect([{name:'بدون'}, ...roseData], item.rose, i, 'rose')}</td>
+                <td><input type="number" value="${item.roseQty}" style="width:35px" onchange="updateItem(${i}, 'roseQty', this.value)"></td>
+                <td class="no-print"><button class="btn btn-danger" onclick="deleteRow(${i})">X</button></td>
+            </tr>`;
+        });
+
+        document.getElementById('summaryBox').innerHTML = `
+            📊 **الملخص الإجمالي للسلعة والتكلفة:**<br>
+            • المساحة الإجمالية للزجاج المزدوح ($m^2$ والغاز): **${totalM2.toFixed(2)} $m^2$** (عدد قطع الزجاج الفردية للتقطيع: **${items.reduce((a,b)=>a+b.qty,0)*2} قطعة**)<br>
+            • إجمالي أطوال الـ Spacer: **${totalSpacerM.toFixed(2)} متر طولي**<br>
+            • إجمالي أطوال الـ Baguette: **${totalBaguetteM.toFixed(2)} متر طولي**<br>
+            • إجمالي عدد الوردات (Rose): **${totalRoseCount} قطعة**<br>
+            <hr style="border: 0; border-top: 1px solid #cbd5e1; margin: 10px 0;">
+            💰 **المبلغ الإجمالي النهائي للطلبية:** <span style="font-size: 20px; color: #16a34a;">${totalPrice.toFixed(2)} DZD</span>
+        `;
+
+        saveOrderData();
+    }
+
+    function buildSelect(opts, currentVal, index, field) {
+        let html = `<select onchange="updateItem(${index}, '${field}', this.value)">`;
+        opts.forEach(o => {
+            html += `<option value="${o.name}" ${o.name === currentVal ? 'selected' : ''}>${o.name}</option>`;
+        });
+        return html + `</select>`;
+    }
+
+    function updateItem(index, field, value) {
+        items[index][field] = (field==='v1'||field==='v2'||field==='spacer'||field==='bag'||field==='rose') ? value : (parseFloat(value) || 0);
+        renderTable();
+    }
+
+    function addNewRow() {
+        items.push({ height: 100, width: 100, qty: 1, v1: glassData[0]?.name||'', v2: glassData[0]?.name||'', spacer: 'Spacer 10mm', bag: 'بدون', bagH: 0, bagV: 0, rose: 'بدون', roseQty: 0 });
+        renderTable();
+    }
+
+    function deleteRow(i) {
+        items.splice(i, 1);
+        if(items.length === 0) items.push({ ...defaultItem });
+        renderTable();
+    }
+
+    function resetOrder() {
+        if(confirm("هل أنت تأكد من تصفير الطلبية لبدء commande جديدة؟")) {
+            items = [{ ...defaultItem }];
+            document.getElementById('clientName').value = '';
+            renderTable();
+        }
+    }
+
+    function openModal() {
+        document.getElementById('settingsModal').style.display = 'flex';
+        renderModalTables();
+    }
+
+    function closeModal() {
+        document.getElementById('settingsModal').style.display = 'none';
+    }
+
+    function renderModalTables() {
+        renderModalTable('glassTable', 'glassData');
+        renderModalTable('baguetteTable', 'baguetteData');
+        renderModalTable('roseTable', 'roseData');
+        document.getElementById('modalSpacerPrice').value = spacerUnitPrice;
+    }
+
+    function renderModalTable(tableId, dataKey) {
+        const tbody = document.querySelector(`#${tableId} tbody`);
+        tbody.innerHTML = '';
+        window[dataKey].forEach((item, index) => {
+            tbody.innerHTML += `<tr>
+                <td><input type="text" value="${item.name}" onchange="${dataKey}[${index}].name=this.value"></td>
+                <td><input type="number" value="${item.price}" onchange="${dataKey}[${index}].price=parseFloat(this.value)||0"></td>
+                <td><button class="btn btn-danger" onclick="${dataKey}.splice(${index},1); renderModalTables();">حذف</button></td>
+            </tr>`;
+        });
+    }
+
+    function addSettingRow(dataKey, emptyObj) {
+        window[dataKey].push(emptyObj);
+        renderModalTables();
+    }
+
+    function saveSettings() {
+        spacerUnitPrice = parseFloat(document.getElementById('modalSpacerPrice').value) || 0;
+        localStorage.setItem('glassData', JSON.stringify(glassData));
+        localStorage.setItem('baguetteData', JSON.stringify(baguetteData));
+        localStorage.setItem('roseData', JSON.stringify(roseData));
+        localStorage.setItem('spacerUnitPrice', spacerUnitPrice);
+        
+        closeModal();
+        renderTable();
+        alert('تم حفظ الأسعار بنجاح وتحديث الفاتورة!');
+    }
+
+    renderTable();
+</script>
+</body>
+</html>
