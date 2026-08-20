@@ -3,55 +3,41 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>حاسبة وتفريغ طلبيات الزجاج المزدوج</title>
+    <title>حاسبة طلبيات الزجاج المزدوج</title>
     <style>
         body { font-family: system-ui, sans-serif; padding: 15px; background: #f0f2f5; color: #1c1e21; }
         .container { max-width: 700px; margin: auto; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
         h2 { text-align: center; color: #1877f2; margin-bottom: 20px; }
-        .btn { display: block; width: 100%; padding: 12px; background: #1877f2; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; text-align: center; margin-top: 10px; }
-        .btn:hover { background: #166fe5; }
+        .btn { display: block; width: 100%; padding: 12px; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; text-align: center; }
         .btn-add { background: #42b72a; margin-top: 15px; }
         .btn-add:hover { background: #36a420; }
-        .btn-calc { background: #f57c00; margin-top: 15px; }
-        .btn-calc:hover { background: #e65100; }
+        .btn-calc { background: #1877f2; margin-top: 10px; }
+        .btn-calc:hover { background: #166fe5; }
         .btn-danger { background: #dc3545; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; }
         
-        input[type="file"] { display: none; }
         input[type="text"], input[type="number"] { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; text-align: center; font-size: 15px; }
-        .key-input { text-align: right !important; margin-bottom: 15px; }
 
-        #preview { max-width: 100%; margin-top: 15px; border-radius: 8px; display: none; border: 1px solid #ddd; }
-        #status { margin-top: 15px; font-weight: bold; text-align: center; color: #555; }
-        
-        .header-info { background: #e7f3ff; padding: 12px; border-radius: 6px; margin-top: 15px; display: flex; gap: 10px; flex-wrap: wrap; }
+        .header-info { background: #e7f3ff; padding: 12px; border-radius: 6px; margin-bottom: 15px; display: flex; gap: 10px; flex-wrap: wrap; }
         .header-info div { flex: 1; min-width: 140px; }
 
-        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
         th, td { border: 1px solid #ddd; padding: 8px; text-align: center; }
         th { background-color: #f8f9fa; color: #333; }
         
-        .summary-box { background: #f8f9fa; border: 2px dashed #1877f2; padding: 15px; border-radius: 8px; margin-top: 20px; text-align: center; font-size: 18px; font-weight: bold; display: none; }
+        .summary-box { background: #f8f9fa; border: 2px dashed #1877f2; padding: 15px; border-radius: 8px; margin-top: 20px; display: none; }
+        .summary-item { font-size: 17px; font-weight: bold; margin: 8px 0; text-align: center; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2>تفريغ طلبية زجاج مزدوج</h2>
+    <h2>حاسبة طلبيات الزجاج المزدوج</h2>
 
-    <label>مفتاح API الخاص بـ Gemini:</label>
-    <input type="password" id="apiKey" class="key-input" placeholder="أدخل API Key هنا...">
-
-    <label for="imageInput" class="btn">📸 تصوير الورقة / رفع صورة</label>
-    <input type="file" id="imageInput" accept="image/*" capture="environment">
-
-    <img id="preview" alt="معاينة الصورة">
-    <div id="status"></div>
-
-    <!-- معلومات العميل والتاريخ قابلة للتعديل -->
+    <!-- معلومات العميل والتاريخ -->
     <div class="header-info">
         <div>
             <label>اسم العميل:</label>
-            <input type="text" id="clientName" placeholder="اسم العميل">
+            <input type="text" id="clientName" placeholder="أدخل اسم العميل">
         </div>
         <div>
             <label>التاريخ:</label>
@@ -71,27 +57,27 @@
             </tr>
         </thead>
         <tbody id="tableBody">
-            <!-- سيتم تفريغ الخانات هنا آلياً أو يدوياً -->
+            <!-- الخانات المضافة -->
         </tbody>
     </table>
 
     <button class="btn btn-add" onclick="addNewRow()">➕ إضافة مقاس جديد</button>
-    <button class="btn btn-calc" onclick="calculateTotalArea()">📐 حساب المساحة الإجمالية (م²)</button>
+    <button class="btn btn-calc" onclick="calculateTotalArea()">📐 حساب المساحة والإجمالي</button>
 
     <div class="summary-box" id="summaryBox">
-        المساحة الإجمالية للطلب: <span id="totalArea" style="color: #1877f2;">0</span> متر مربع
+        <div class="summary-item">
+            مساحة القطع المزدوجة (الفتحة): <span id="unitArea" style="color: #1877f2;">0</span> م²
+        </div>
+        <hr style="border: 0.5px solid #eee;">
+        <div class="summary-item" style="color: #d93025;">
+            إجمالي المساحة الفعلية للزجاج (لوحين): <span id="glassArea">0</span> م²
+        </div>
     </div>
 </div>
 
 <script>
-    const imageInput = document.getElementById('imageInput');
-    const preview = document.getElementById('preview');
-    const status = document.getElementById('status');
     const tableBody = document.getElementById('tableBody');
-    const clientName = document.getElementById('clientName');
-    const orderDate = document.getElementById('orderDate');
 
-    // إضافة صف خانات جديد فارغ
     function addNewRow(height = '', width = '', quantity = 1) {
         const rowCount = tableBody.rows.length + 1;
         const row = document.createElement('tr');
@@ -107,22 +93,23 @@
         updateRowNumbers();
     }
 
-    // حذف صف
     function removeRow(btn) {
-        btn.closest('tr').remove();
-        updateRowNumbers();
+        if (tableBody.rows.length > 1) {
+            btn.closest('tr').remove();
+            updateRowNumbers();
+        } else {
+            alert('يجب أن يحتوي الجدول على مقاس واحد على الأقل.');
+        }
     }
 
-    // إعادة ترتيب أرقام الصفوف
     function updateRowNumbers() {
         Array.from(tableBody.rows).forEach((row, index) => {
             row.cells[0].innerText = index + 1;
         });
     }
 
-    // حساب المساحة الإجمالية بالمتر المربع
     function calculateTotalArea() {
-        let totalSqMeters = 0;
+        let totalUnitArea = 0;
         const rows = tableBody.querySelectorAll('tr');
 
         rows.forEach(row => {
@@ -130,80 +117,24 @@
             const w = parseFloat(row.querySelector('.input-width').value) || 0;
             const q = parseInt(row.querySelector('.input-qty').value) || 0;
 
-            // تحويل من سم إلى متر وحساب المساحة
+            // حساب مساحة القطعة الواحدة بالمتر المربع
             const area = (h / 100) * (w / 100) * q;
-            totalSqMeters += area;
+            totalUnitArea += area;
         });
 
-        document.getElementById('totalArea').innerText = totalSqMeters.toFixed(2);
+        // مساحة الزجاج الصافي تعادل ضرب مساحة القطع في 2 (لوحين زجاج)
+        const totalGlassArea = totalUnitArea * 2;
+
+        document.getElementById('unitArea').innerText = totalUnitArea.toFixed(2);
+        document.getElementById('glassArea').innerText = totalGlassArea.toFixed(2);
         document.getElementById('summaryBox').style.display = 'block';
     }
 
-    // قراءة الصورة وتحويلها لخانات
-    imageInput.addEventListener('change', async (e) => {
-        const file = e.target.files[0];
-        const apiKey = document.getElementById('apiKey').value.trim();
-
-        if (!file) return;
-        if (!apiKey) {
-            alert('يرجى إدخال API Key أولاً للمتابعة!');
-            return;
-        }
-
-        preview.src = URL.createObjectURL(file);
-        preview.style.display = 'block';
-        status.innerText = '⏳ جاري قراءة وتحليل الورقة بالذكاء الاصطناعي...';
-
-        const reader = new FileReader();
-        reader.readAsDataURL(file);
-        reader.onload = async () => {
-            const base64Image = reader.result.split(',')[1];
-
-            try {
-                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        contents: [{
-                            parts: [
-                                { text: "قم بقراءة خط اليد في هذه الصورة المخصصة لطلبيات الزجاج المزدوج. استخرج اسم العميل والتاريخ والمقاسات والكميات. أرجع النتيجة على شكل JSON فقط بالصيغة التالية بدون أي نص إضافي: {\"client\": \"اسم العميل\", \"date\": \"التاريخ\", \"items\": [{\"height\": 197, \"width\": 46.5, \"quantity\": 2}]}" },
-                                { inline_data: { mime_type: file.type, data: base64Image } }
-                            ]
-                        }]
-                    })
-                });
-
-                const data = await response.json();
-                const rawText = data.candidates[0].content.parts[0].text;
-                
-                const jsonString = rawText.replace(/```json|```/g, '').trim();
-                const parsedData = JSON.parse(jsonString);
-
-                // ملء اسم العميل والتاريخ
-                clientName.value = parsedData.client || '';
-                orderDate.value = parsedData.date || '';
-
-                // تفريغ الجدول الحالي وملئه بالخانات الجديدة
-                tableBody.innerHTML = '';
-                if (parsedData.items && parsedData.items.length > 0) {
-                    parsedData.items.forEach(item => {
-                        addNewRow(item.height, item.width, item.quantity);
-                    });
-                } else {
-                    addNewRow();
-                }
-
-                status.innerText = '✅ تم استخراج المقاسات وإضافتها في الخانات بنجاح!';
-
-            } catch (err) {
-                console.error(err);
-                status.innerText = '❌ حدث خطأ أثناء تحليل الورقة. تأكد من صحة المفتاح API.';
-            }
-        };
-    });
-
-    // إضافة صف فارغ عند فتح الصفحة لأول مرة
-    addNewRow();
+    window.onload = () => {
+        addNewRow();
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('orderDate').value = today;
+    };
 </script>
 
 </body>
