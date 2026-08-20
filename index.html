@@ -5,25 +5,38 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>حاسبة وتفريغ طلبيات الزجاج المزدوج</title>
     <style>
-        body { font-family: system-ui, sans-serif; padding: 20px; background: #f0f2f5; color: #1c1e21; }
-        .container { max-width: 650px; margin: auto; background: white; padding: 25px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        body { font-family: system-ui, sans-serif; padding: 15px; background: #f0f2f5; color: #1c1e21; }
+        .container { max-width: 700px; margin: auto; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
         h2 { text-align: center; color: #1877f2; margin-bottom: 20px; }
-        .btn { display: block; width: 100%; padding: 14px; background: #1877f2; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; text-align: center; margin-top: 10px; }
+        .btn { display: block; width: 100%; padding: 12px; background: #1877f2; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; text-align: center; margin-top: 10px; }
         .btn:hover { background: #166fe5; }
+        .btn-add { background: #42b72a; margin-top: 15px; }
+        .btn-add:hover { background: #36a420; }
+        .btn-calc { background: #f57c00; margin-top: 15px; }
+        .btn-calc:hover { background: #e65100; }
+        .btn-danger { background: #dc3545; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; }
+        
         input[type="file"] { display: none; }
+        input[type="text"], input[type="number"] { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; text-align: center; font-size: 15px; }
+        .key-input { text-align: right !important; margin-bottom: 15px; }
+
         #preview { max-width: 100%; margin-top: 15px; border-radius: 8px; display: none; border: 1px solid #ddd; }
         #status { margin-top: 15px; font-weight: bold; text-align: center; color: #555; }
-        .key-input { width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; }
+        
+        .header-info { background: #e7f3ff; padding: 12px; border-radius: 6px; margin-top: 15px; display: flex; gap: 10px; flex-wrap: wrap; }
+        .header-info div { flex: 1; min-width: 140px; }
+
         table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th, td { border: 1px solid #ddd; padding: 10px; text-align: center; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: center; }
         th { background-color: #f8f9fa; color: #333; }
-        .header-info { background: #e7f3ff; padding: 12px; border-radius: 6px; margin-top: 15px; font-weight: bold; }
+        
+        .summary-box { background: #f8f9fa; border: 2px dashed #1877f2; padding: 15px; border-radius: 8px; margin-top: 20px; text-align: center; font-size: 18px; font-weight: bold; display: none; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2>تفريغ طلبية زجاج مزدوج (ذكاء اصطناعي)</h2>
+    <h2>تفريغ طلبية زجاج مزدوج</h2>
 
     <label>مفتاح API الخاص بـ Gemini:</label>
     <input type="password" id="apiKey" class="key-input" placeholder="أدخل API Key هنا...">
@@ -34,20 +47,39 @@
     <img id="preview" alt="معاينة الصورة">
     <div id="status"></div>
 
-    <div id="resultArea" style="display: none;">
-        <div class="header-info" id="clientInfo"></div>
-        
-        <table>
-            <thead>
-                <tr>
-                    <th>#</th>
-                    <th>الارتفاع (سم)</th>
-                    <th>العرض (سم)</th>
-                    <th>الكمية</th>
-                </tr>
-            </thead>
-            <tbody id="tableBody"></tbody>
-        </table>
+    <!-- معلومات العميل والتاريخ قابلة للتعديل -->
+    <div class="header-info">
+        <div>
+            <label>اسم العميل:</label>
+            <input type="text" id="clientName" placeholder="اسم العميل">
+        </div>
+        <div>
+            <label>التاريخ:</label>
+            <input type="text" id="orderDate" placeholder="التاريخ">
+        </div>
+    </div>
+
+    <!-- جدول الخانات المدخلة -->
+    <table>
+        <thead>
+            <tr>
+                <th style="width: 10%;">#</th>
+                <th style="width: 30%;">الارتفاع (سم)</th>
+                <th style="width: 30%;">العرض (سم)</th>
+                <th style="width: 20%;">الكمية</th>
+                <th style="width: 10%;">حذف</th>
+            </tr>
+        </thead>
+        <tbody id="tableBody">
+            <!-- سيتم تفريغ الخانات هنا آلياً أو يدوياً -->
+        </tbody>
+    </table>
+
+    <button class="btn btn-add" onclick="addNewRow()">➕ إضافة مقاس جديد</button>
+    <button class="btn btn-calc" onclick="calculateTotalArea()">📐 حساب المساحة الإجمالية (م²)</button>
+
+    <div class="summary-box" id="summaryBox">
+        المساحة الإجمالية للطلب: <span id="totalArea" style="color: #1877f2;">0</span> متر مربع
     </div>
 </div>
 
@@ -55,10 +87,59 @@
     const imageInput = document.getElementById('imageInput');
     const preview = document.getElementById('preview');
     const status = document.getElementById('status');
-    const resultArea = document.getElementById('resultArea');
-    const clientInfo = document.getElementById('clientInfo');
     const tableBody = document.getElementById('tableBody');
+    const clientName = document.getElementById('clientName');
+    const orderDate = document.getElementById('orderDate');
 
+    // إضافة صف خانات جديد فارغ
+    function addNewRow(height = '', width = '', quantity = 1) {
+        const rowCount = tableBody.rows.length + 1;
+        const row = document.createElement('tr');
+        
+        row.innerHTML = `
+            <td>${rowCount}</td>
+            <td><input type="number" step="any" class="input-height" value="${height}" placeholder="0"></td>
+            <td><input type="number" step="any" class="input-width" value="${width}" placeholder="0"></td>
+            <td><input type="number" class="input-qty" value="${quantity}" min="1"></td>
+            <td><button class="btn-danger" onclick="removeRow(this)">✕</button></td>
+        `;
+        tableBody.appendChild(row);
+        updateRowNumbers();
+    }
+
+    // حذف صف
+    function removeRow(btn) {
+        btn.closest('tr').remove();
+        updateRowNumbers();
+    }
+
+    // إعادة ترتيب أرقام الصفوف
+    function updateRowNumbers() {
+        Array.from(tableBody.rows).forEach((row, index) => {
+            row.cells[0].innerText = index + 1;
+        });
+    }
+
+    // حساب المساحة الإجمالية بالمتر المربع
+    function calculateTotalArea() {
+        let totalSqMeters = 0;
+        const rows = tableBody.querySelectorAll('tr');
+
+        rows.forEach(row => {
+            const h = parseFloat(row.querySelector('.input-height').value) || 0;
+            const w = parseFloat(row.querySelector('.input-width').value) || 0;
+            const q = parseInt(row.querySelector('.input-qty').value) || 0;
+
+            // تحويل من سم إلى متر وحساب المساحة
+            const area = (h / 100) * (w / 100) * q;
+            totalSqMeters += area;
+        });
+
+        document.getElementById('totalArea').innerText = totalSqMeters.toFixed(2);
+        document.getElementById('summaryBox').style.display = 'block';
+    }
+
+    // قراءة الصورة وتحويلها لخانات
     imageInput.addEventListener('change', async (e) => {
         const file = e.target.files[0];
         const apiKey = document.getElementById('apiKey').value.trim();
@@ -72,9 +153,7 @@
         preview.src = URL.createObjectURL(file);
         preview.style.display = 'block';
         status.innerText = '⏳ جاري قراءة وتحليل الورقة بالذكاء الاصطناعي...';
-        resultArea.style.display = 'none';
 
-        // تحويل الصورة إلى Base64
         const reader = new FileReader();
         reader.readAsDataURL(file);
         reader.onload = async () => {
@@ -97,26 +176,24 @@
                 const data = await response.json();
                 const rawText = data.candidates[0].content.parts[0].text;
                 
-                // تنظيف النص واستخراج JSON
                 const jsonString = rawText.replace(/```json|```/g, '').trim();
                 const parsedData = JSON.parse(jsonString);
 
-                // عرض البيانات
-                clientInfo.innerText = `العميل: ${parsedData.client || 'غير محدد'} | التاريخ: ${parsedData.date || 'غير محدد'}`;
-                
-                tableBody.innerHTML = '';
-                parsedData.items.forEach((item, index) => {
-                    const row = `<tr>
-                        <td>${index + 1}</td>
-                        <td>${item.height}</td>
-                        <td>${item.width}</td>
-                        <td>${item.quantity}</td>
-                    </tr>`;
-                    tableBody.innerHTML += row;
-                });
+                // ملء اسم العميل والتاريخ
+                clientName.value = parsedData.client || '';
+                orderDate.value = parsedData.date || '';
 
-                resultArea.style.display = 'block';
-                status.innerText = '✅ تم استخراج المقاسات والكميات بنجاح!';
+                // تفريغ الجدول الحالي وملئه بالخانات الجديدة
+                tableBody.innerHTML = '';
+                if (parsedData.items && parsedData.items.length > 0) {
+                    parsedData.items.forEach(item => {
+                        addNewRow(item.height, item.width, item.quantity);
+                    });
+                } else {
+                    addNewRow();
+                }
+
+                status.innerText = '✅ تم استخراج المقاسات وإضافتها في الخانات بنجاح!';
 
             } catch (err) {
                 console.error(err);
@@ -124,6 +201,9 @@
             }
         };
     });
+
+    // إضافة صف فارغ عند فتح الصفحة لأول مرة
+    addNewRow();
 </script>
 
 </body>
