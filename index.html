@@ -6,7 +6,7 @@
     <title>حاسبة طلبيات الزجاج المزدوج</title>
     <style>
         body { font-family: system-ui, sans-serif; padding: 15px; background: #f0f2f5; color: #1c1e21; }
-        .container { max-width: 1000px; margin: auto; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .container { max-width: 1100px; margin: auto; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
         h2 { text-align: center; color: #1877f2; margin-bottom: 20px; }
         .btn { display: block; width: 100%; padding: 12px; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; text-align: center; }
         .btn-add { background: #42b72a; margin-top: 15px; }
@@ -25,7 +25,7 @@
         .global-box label { font-weight: bold; color: #1877f2; display: block; margin-bottom: 5px; }
 
         .table-responsive { overflow-x: auto; }
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; min-width: 800px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; min-width: 900px; }
         th, td { border: 1px solid #ddd; padding: 8px; text-align: center; }
         th { background-color: #f8f9fa; color: #333; }
         
@@ -64,6 +64,13 @@
                     <select id="globalSpacer" onchange="applyGlobalSettings()"></select>
                 </div>
                 <div>
+                    <small>حقن الغاز (Gaz):</small>
+                    <select id="globalGas" onchange="applyGlobalSettings()">
+                        <option value="Avec Gaz">Avec Gaz (مع غاز)</option>
+                        <option value="Sans Gaz">Sans Gaz (بدون غاز)</option>
+                    </select>
+                </div>
+                <div>
                     <small>الجهة 2 (الداخلية):</small>
                     <select id="globalSide2" onchange="applyGlobalSettings()"></select>
                 </div>
@@ -76,13 +83,14 @@
             <thead>
                 <tr>
                     <th style="width: 4%;">#</th>
-                    <th style="width: 12%;">الارتفاع (مم)</th>
-                    <th style="width: 12%;">العرض (مم)</th>
-                    <th style="width: 8%;">الكمية</th>
-                    <th style="width: 18%;">الجهة 1 (الخارجية)</th>
-                    <th style="width: 14%;">الفاصل (Spacer)</th>
-                    <th style="width: 18%;">الجهة 2 (الداخلية)</th>
-                    <th style="width: 9%;">المحيط (م)</th>
+                    <th style="width: 10%;">الارتفاع (مم)</th>
+                    <th style="width: 10%;">العرض (مم)</th>
+                    <th style="width: 7%;">الكمية</th>
+                    <th style="width: 16%;">الجهة 1 (الخارجية)</th>
+                    <th style="width: 12%;">الفاصل (Spacer)</th>
+                    <th style="width: 12%;">الغاز (Gaz)</th>
+                    <th style="width: 16%;">الجهة 2 (الداخلية)</th>
+                    <th style="width: 8%;">المحيط (م)</th>
                     <th style="width: 5%;">حذف</th>
                 </tr>
             </thead>
@@ -104,6 +112,11 @@
         
         <strong style="display: block; margin-bottom: 8px;">تفصيل أمتار الفواصل (Spacer) الطولية:</strong>
         <ul class="summary-list" id="spacerDetails"></ul>
+
+        <hr style="border: 0.5px solid #ddd; margin: 10px 0;">
+        
+        <strong style="display: block; margin-bottom: 8px;">تفصيل مساحة حقن الغاز (Gaz):</strong>
+        <ul class="summary-list" id="gasDetails"></ul>
     </div>
 </div>
 
@@ -123,6 +136,7 @@
     const globalSide1 = document.getElementById('globalSide1');
     const globalSide2 = document.getElementById('globalSide2');
     const globalSpacer = document.getElementById('globalSpacer');
+    const globalGas = document.getElementById('globalGas');
 
     function createOptions(array, selectedValue) {
         return array.map(item => `<option value="${item}" ${item === selectedValue ? 'selected' : ''}>${item}</option>`).join('');
@@ -138,16 +152,17 @@
         const v1 = globalSide1.value;
         const v2 = globalSide2.value;
         const sp = globalSpacer.value;
+        const gas = globalGas.value;
 
         const rows = tableBody.querySelectorAll('tr');
         rows.forEach(row => {
             row.querySelector('.glass-side1').value = v1;
             row.querySelector('.glass-side2').value = v2;
             row.querySelector('.spacer-type').value = sp;
+            row.querySelector('.gas-option').value = gas;
         });
     }
 
-    // تم تغيير القيمة الافتراضية للكمية لتكون فارغة '' بدلاً من 1
     function addNewRow(height = '', width = '', quantity = '') {
         const rowCount = tableBody.rows.length + 1;
         const row = document.createElement('tr');
@@ -155,14 +170,21 @@
         const current1 = globalSide1.value || "Verre clair 4mm";
         const current2 = globalSide2.value || "Verre clair 4mm";
         const currentSp = globalSpacer.value || "Spacer 6mm";
+        const currentGas = globalGas.value || "Avec Gaz";
 
         row.innerHTML = `
             <td>${rowCount}</td>
-            <td><input type="number" step="any" class="input-height" value="${height}" placeholder="مثال: 1200" oninput="updateRowPerimeter(this)"></td>
-            <td><input type="number" step="any" class="input-width" value="${width}" placeholder="مثال: 800" oninput="updateRowPerimeter(this)"></td>
+            <td><input type="number" step="any" class="input-height" value="${height}" placeholder="1200" oninput="updateRowPerimeter(this)"></td>
+            <td><input type="number" step="any" class="input-width" value="${width}" placeholder="800" oninput="updateRowPerimeter(this)"></td>
             <td><input type="number" class="input-qty" value="${quantity}" placeholder="0" min="1" oninput="updateRowPerimeter(this)"></td>
             <td><select class="glass-side1">${createOptions(glassTypes, current1)}</select></td>
             <td><select class="spacer-type">${createOptions(spacerTypes, currentSp)}</select></td>
+            <td>
+                <select class="gas-option">
+                    <option value="Avec Gaz" ${currentGas === 'Avec Gaz' ? 'selected' : ''}>Avec Gaz</option>
+                    <option value="Sans Gaz" ${currentGas === 'Sans Gaz' ? 'selected' : ''}>Sans Gaz</option>
+                </select>
+            </td>
             <td><select class="glass-side2">${createOptions(glassTypes, current2)}</select></td>
             <td><span class="row-perimeter">0.00</span></td>
             <td><button class="btn-danger" onclick="removeRow(this)">✕</button></td>
@@ -200,6 +222,7 @@
         let grandTotalGlassArea = 0;
         const glassSummary = {};
         const spacerSummary = {};
+        const gasSummary = {};
 
         const rows = tableBody.querySelectorAll('tr');
 
@@ -211,20 +234,29 @@
             const side1 = row.querySelector('.glass-side1').value;
             const side2 = row.querySelector('.glass-side2').value;
             const spacer = row.querySelector('.spacer-type').value;
+            const gas = row.querySelector('.gas-option').value;
 
-            const singleGlassArea = (h / 1000) * (w / 1000) * q;
+            // مساحة قطعة الزجاج المزدوجة الواحدة بالمتر المربع
+            const unitArea = (h / 1000) * (w / 1000) * q;
+            // المحيط بالمتر الطولي
             const perimeterMeter = ((h + w) * 2 / 1000) * q;
 
-            glassSummary[side1] = (glassSummary[side1] || 0) + singleGlassArea;
-            glassSummary[side2] = (glassSummary[side2] || 0) + singleGlassArea;
+            // تجميع أمتار الزجاج (القطعة المزدوجة تتكون من لوحين)
+            glassSummary[side1] = (glassSummary[side1] || 0) + unitArea;
+            glassSummary[side2] = (glassSummary[side2] || 0) + unitArea;
 
+            // تجميع أمتار الفواصل (Spacer)
             spacerSummary[spacer] = (spacerSummary[spacer] || 0) + perimeterMeter;
 
-            grandTotalGlassArea += (singleGlassArea * 2);
+            // تجميع مساحة الغاز تلقائياً بناءً على مساحة القطعة
+            gasSummary[gas] = (gasSummary[gas] || 0) + unitArea;
+
+            grandTotalGlassArea += (unitArea * 2);
         });
 
         document.getElementById('totalAreaText').innerText = `إجمالي المساحة الفعلية للزجاج: ${grandTotalGlassArea.toFixed(2)} م²`;
 
+        // تفصيل الزجاج
         const glassDetailsList = document.getElementById('glassDetails');
         glassDetailsList.innerHTML = '';
         for (const [type, area] of Object.entries(glassSummary)) {
@@ -233,12 +265,22 @@
             glassDetailsList.appendChild(li);
         }
 
+        // تفصيل الفواصل
         const spacerDetailsList = document.getElementById('spacerDetails');
         spacerDetailsList.innerHTML = '';
         for (const [sp, len] of Object.entries(spacerSummary)) {
             const li = document.createElement('li');
             li.innerHTML = `<span>${sp}</span> <strong>${len.toFixed(2)} متر طولي (m)</strong>`;
             spacerDetailsList.appendChild(li);
+        }
+
+        // تفصيل الغاز
+        const gasDetailsList = document.getElementById('gasDetails');
+        gasDetailsList.innerHTML = '';
+        for (const [gOpt, area] of Object.entries(gasSummary)) {
+            const li = document.createElement('li');
+            li.innerHTML = `<span>${gOpt}</span> <strong>${area.toFixed(2)} م²</strong>`;
+            gasDetailsList.appendChild(li);
         }
 
         document.getElementById('summaryBox').style.display = 'block';
