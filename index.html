@@ -16,10 +16,13 @@
         .btn-extra:hover { background: #c69500; }
         .btn-calc { background: #1877f2; margin-top: 10px; }
         .btn-calc:hover { background: #166fe5; }
+        .btn-save-order { background: #17a2b8; margin-top: 10px; }
+        .btn-save-order:hover { background: #138496; }
         .btn-danger { background: #dc3545; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; }
+        .btn-info { background: #007bff; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 12px; }
         .btn-reset { background: #6c757d; width: auto; padding: 6px 12px; font-size: 12px; }
         
-        input[type="text"], input[type="number"], select { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-size: 14px; text-align: center; }
+        input[type="text"], input[type="number"], input[type="date"], select { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-size: 14px; text-align: center; }
 
         .header-info { background: #e7f3ff; padding: 15px; border-radius: 8px; margin-bottom: 15px; }
         .info-row { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
@@ -30,6 +33,9 @@
 
         .extra-section { background: #fff8e1; padding: 15px; border-radius: 8px; border: 1px solid #ffe082; margin-top: 20px; }
         .extra-section h3 { margin: 0 0 10px 0; color: #856404; font-size: 16px; }
+
+        .history-section { background: #f8f9fa; padding: 15px; border-radius: 8px; border: 1px solid #dee2e6; margin-top: 25px; }
+        .history-section h3 { margin: 0 0 10px 0; color: #343a40; font-size: 16px; display: flex; justify-content: space-between; align-items: center; }
 
         .table-responsive { overflow-x: auto; }
         table { width: 100%; border-collapse: collapse; margin-top: 15px; min-width: 900px; }
@@ -64,7 +70,7 @@
             </div>
             <div>
                 <label>التاريخ:</label>
-                <input type="text" id="orderDate" placeholder="التاريخ">
+                <input type="date" id="orderDate">
             </div>
             <div>
                 <label style="color: #856404; font-weight: bold;">نوع الخدمة للطلبية:</label>
@@ -170,6 +176,32 @@
         
         <strong style="display: block; margin-bottom: 8px;">تفصيل حقن الغاز (Gaz):</strong>
         <ul class="summary-list" id="gasDetails"></ul>
+
+        <button class="btn btn-save-order" onclick="saveCurrentOrder()">💾 حفظ الطلبية في السجل</button>
+    </div>
+
+    <!-- سجل الطلبيات المحفوظة -->
+    <div class="history-section">
+        <h3>
+            <span>📋 سجل الطلبيات المحفوظة</span>
+            <button class="btn btn-reset" onclick="clearAllOrders()">🗑️ مسح كافة السجلات</button>
+        </h3>
+        <div class="table-responsive">
+            <table style="min-width: 100%;">
+                <thead>
+                    <tr>
+                        <th style="width: 5%;">#</th>
+                        <th>التاريخ</th>
+                        <th>اسم العميل</th>
+                        <th>نوع الخدمة</th>
+                        <th>المساحة الإجمالية</th>
+                        <th>السعر الإجمالي</th>
+                        <th style="width: 15%;">إجراءات</th>
+                    </tr>
+                </thead>
+                <tbody id="historyTableBody"></tbody>
+            </table>
+        </div>
     </div>
 
     <!-- قسم الأسعار -->
@@ -213,6 +245,9 @@
         prestation: { glass: {}, spacer: {}, gas: { "Avec Gaz": 0 } },
         demi_prestation: { glass: {}, spacer: {}, gas: { "Avec Gaz": 0 } }
     };
+
+    let savedOrders = JSON.parse(localStorage.getItem('glass_calculator_orders')) || [];
+    let lastCalculatedData = null;
 
     function savePricesToStorage() {
         localStorage.setItem('glass_calculator_prices_v2', JSON.stringify(prices));
@@ -393,7 +428,6 @@
         const spacerSummary = {};
         const gasSummary = {};
 
-        // 1. حساب زجاج الطلبية
         const rows = tableBody.querySelectorAll('tr');
         rows.forEach(row => {
             const h = parseFloat(row.querySelector('.input-height').value) || 0;
@@ -421,7 +455,6 @@
             grandTotalGlassArea += (unitArea * 2);
         });
 
-        // 2. حساب قطع الزجاج المنفصلة
         const extraRows = extraGlassBody.querySelectorAll('tr');
         extraRows.forEach(row => {
             const h = parseFloat(row.querySelector('.extra-height').value) || 0;
@@ -435,7 +468,6 @@
 
         document.getElementById('totalAreaText').innerText = `إجمالي المساحة الفعلية للزجاج المزدوج: ${grandTotalGlassArea.toFixed(2)} م²`;
 
-        // تفصيل زجاج الطلبية
         const glassDetailsList = document.getElementById('glassDetails');
         glassDetailsList.innerHTML = '';
         if (serviceMode === 'prestation') {
@@ -453,14 +485,12 @@
             }
         }
 
-        // تفصيل قطع الزجاج المنفصلة (يتم جلب سعر الزجاج من النظام المالي المحدد، وإذا كان غير محدد يجلب من Tous fourni)
         const extraGlassDetailsList = document.getElementById('extraGlassDetails');
         extraGlassDetailsList.innerHTML = '';
         if (Object.keys(extraGlassSummary).length === 0) {
             extraGlassDetailsList.innerHTML = '<li><span>لا توجد قطع زجاج منفصلة مضافة</span> <strong>0.00</strong></li>';
         } else {
             for (const [type, area] of Object.entries(extraGlassSummary)) {
-                // جلب السعر المحدد للخدمة، وفي حال كان 0 أو غير معرف يأخذ سعر Tous fourni تلقائيًا
                 let unitPrice = (prices[serviceMode]?.glass && prices[serviceMode].glass[type]) 
                     ? prices[serviceMode].glass[type] 
                     : (prices.tous_fourni.glass[type] || 0);
@@ -474,7 +504,6 @@
             }
         }
 
-        // تفصيل الفواصل
         const spacerDetailsList = document.getElementById('spacerDetails');
         spacerDetailsList.innerHTML = '';
         const spacerPrices = prices[serviceMode]?.spacer || {};
@@ -488,7 +517,6 @@
             spacerDetailsList.appendChild(li);
         }
 
-        // تفصيل الغاز
         const gasDetailsList = document.getElementById('gasDetails');
         gasDetailsList.innerHTML = '';
         const gasPrices = prices[serviceMode]?.gas || {};
@@ -507,12 +535,92 @@
 
         document.getElementById('totalPriceText').innerText = `السعر الإجمالي للطلبية: ${grandTotalPrice.toFixed(2)}`;
         document.getElementById('summaryBox').style.display = 'block';
+
+        lastCalculatedData = {
+            totalArea: grandTotalGlassArea.toFixed(2),
+            totalPrice: grandTotalPrice.toFixed(2)
+        };
+    }
+
+    // --- حفظ واسترجاع الطلبيات ---
+    function saveCurrentOrder() {
+        if (!lastCalculatedData) {
+            alert('الرجاء حساب الطلبية أولاً قبل حفظها!');
+            return;
+        }
+
+        const clientName = document.getElementById('clientName').value.trim() || 'عميل بدون اسم';
+        const orderDate = document.getElementById('orderDate').value || new Date().toISOString().split('T')[0];
+        const serviceType = document.getElementById('serviceType').value;
+
+        const orderObj = {
+            id: Date.now(),
+            clientName,
+            orderDate,
+            serviceType,
+            totalArea: lastCalculatedData.totalArea,
+            totalPrice: lastCalculatedData.totalPrice
+        };
+
+        savedOrders.push(orderObj);
+        localStorage.setItem('glass_calculator_orders', JSON.stringify(savedOrders));
+        renderOrderHistory();
+        alert('✅ تم حفظ الطلبية في السجل بنجاح!');
+    }
+
+    function renderOrderHistory() {
+        const historyTbody = document.getElementById('historyTableBody');
+        historyTbody.innerHTML = '';
+
+        if (savedOrders.length === 0) {
+            historyTbody.innerHTML = '<tr><td colspan="7">لا توجد طلبيات محفوظة حالياً</td></tr>';
+            return;
+        }
+
+        const serviceLabels = {
+            'tous_fourni': 'Tous fourni',
+            'prestation': 'Prestation',
+            'demi_prestation': 'Demi prestation'
+        };
+
+        savedOrders.forEach((order, index) => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${index + 1}</td>
+                <td>${order.orderDate}</td>
+                <td><strong>${order.clientName}</strong></td>
+                <td>${serviceLabels[order.serviceType] || order.serviceType}</td>
+                <td>${order.totalArea} م²</td>
+                <td><strong>${order.totalPrice}</strong></td>
+                <td>
+                    <button class="btn-danger" onclick="deleteOrder(${order.id})">حذف</button>
+                </td>
+            `;
+            historyTbody.appendChild(tr);
+        });
+    }
+
+    function deleteOrder(id) {
+        if (confirm('هل أنت تأكد من حذف هذه الطلبية من السجل؟')) {
+            savedOrders = savedOrders.filter(o => o.id !== id);
+            localStorage.setItem('glass_calculator_orders', JSON.stringify(savedOrders));
+            renderOrderHistory();
+        }
+    }
+
+    function clearAllOrders() {
+        if (confirm('هل أنت تأكد من مسح جميع الطلبيات المحفوظة؟')) {
+            savedOrders = [];
+            localStorage.setItem('glass_calculator_orders', JSON.stringify(savedOrders));
+            renderOrderHistory();
+        }
     }
 
     window.onload = () => {
         setupGlobalOptions();
         initPriceTable();
         addNewRow();
+        renderOrderHistory();
         const today = new Date().toISOString().split('T')[0];
         document.getElementById('orderDate').value = today;
     };
