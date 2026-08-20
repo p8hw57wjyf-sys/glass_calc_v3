@@ -6,7 +6,7 @@
     <title>حاسبة طلبيات الزجاج المزدوج</title>
     <style>
         body { font-family: system-ui, sans-serif; padding: 15px; background: #f0f2f5; color: #1c1e21; }
-        .container { max-width: 900px; margin: auto; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .container { max-width: 1000px; margin: auto; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
         h2 { text-align: center; color: #1877f2; margin-bottom: 20px; }
         .btn { display: block; width: 100%; padding: 12px; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; text-align: center; }
         .btn-add { background: #42b72a; margin-top: 15px; }
@@ -21,11 +21,11 @@
         .info-row { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
         .info-row div { flex: 1; min-width: 140px; }
         
-        .global-glass-box { background: #ffffff; padding: 12px; border-radius: 6px; border: 1px solid #b2d5ff; margin-top: 10px; }
-        .global-glass-box label { font-weight: bold; color: #1877f2; display: block; margin-bottom: 5px; }
+        .global-box { background: #ffffff; padding: 12px; border-radius: 6px; border: 1px solid #b2d5ff; margin-top: 10px; }
+        .global-box label { font-weight: bold; color: #1877f2; display: block; margin-bottom: 5px; }
 
         .table-responsive { overflow-x: auto; }
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; min-width: 650px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; min-width: 800px; }
         th, td { border: 1px solid #ddd; padding: 8px; text-align: center; }
         th { background-color: #f8f9fa; color: #333; }
         
@@ -52,17 +52,21 @@
             </div>
         </div>
 
-        <!-- تحديد الزجاج الافتراضي للطلبية كاملة -->
-        <div class="global-glass-box">
-            <label>نوع الزجاج الافتراضي للطلبية كاملة:</label>
+        <!-- تحديد الخيارات العامة للطلبية كاملة -->
+        <div class="global-box">
+            <label>الخيارات الافتراضية للطلبية كاملة:</label>
             <div class="info-row" style="margin-bottom:0;">
                 <div>
                     <small>الجهة 1 (الخارجية):</small>
-                    <select id="globalSide1" onchange="applyGlobalGlass()"></select>
+                    <select id="globalSide1" onchange="applyGlobalSettings()"></select>
+                </div>
+                <div>
+                    <small>الفاصل العام (Spacer):</small>
+                    <select id="globalSpacer" onchange="applyGlobalSettings()"></select>
                 </div>
                 <div>
                     <small>الجهة 2 (الداخلية):</small>
-                    <select id="globalSide2" onchange="applyGlobalGlass()"></select>
+                    <select id="globalSide2" onchange="applyGlobalSettings()"></select>
                 </div>
             </div>
         </div>
@@ -72,13 +76,15 @@
         <table>
             <thead>
                 <tr>
-                    <th style="width: 5%;">#</th>
-                    <th style="width: 15%;">الارتفاع (سم)</th>
-                    <th style="width: 15%;">العرض (سم)</th>
-                    <th style="width: 10%;">الكمية</th>
-                    <th style="width: 22%;">الجهة 1 (الخارجية)</th>
-                    <th style="width: 22%;">الجهة 2 (الداخلية)</th>
-                    <th style="width: 10%;">حذف</th>
+                    <th style="width: 4%;">#</th>
+                    <th style="width: 12%;">الارتفاع (سم)</th>
+                    <th style="width: 12%;">العرض (سم)</th>
+                    <th style="width: 8%;">الكمية</th>
+                    <th style="width: 18%;">الجهة 1 (الخارجية)</th>
+                    <th style="width: 14%;">الفاصل (Spacer)</th>
+                    <th style="width: 18%;">الجهة 2 (الداخلية)</th>
+                    <th style="width: 9%;">المحيط (م)</th>
+                    <th style="width: 5%;">حذف</th>
                 </tr>
             </thead>
             <tbody id="tableBody"></tbody>
@@ -86,13 +92,19 @@
     </div>
 
     <button class="btn btn-add" onclick="addNewRow()">➕ إضافة مقاس جديد</button>
-    <button class="btn btn-calc" onclick="calculateTotalArea()">📐 حساب المساحات وتفصيل أنواع الزجاج</button>
+    <button class="btn btn-calc" onclick="calculateTotalArea()">📐 حساب المساحات والمحيط وتفصيل الطلبية</button>
 
     <div class="summary-box" id="summaryBox">
         <div class="summary-title" id="totalAreaText"></div>
         <hr style="border: 0.5px solid #ddd; margin: 10px 0;">
-        <strong style="display: block; margin-bottom: 8px;">تفصيل المساحات حسب نوع الزجاج:</strong>
+        
+        <strong style="display: block; margin-bottom: 8px;">تفصيل أمتار الزجاج حسب النوع:</strong>
         <ul class="summary-list" id="glassDetails"></ul>
+        
+        <hr style="border: 0.5px solid #ddd; margin: 10px 0;">
+        
+        <strong style="display: block; margin-bottom: 8px;">تفصيل أمتار الفواصل (Spacer) الطولية:</strong>
+        <ul class="summary-list" id="spacerDetails"></ul>
     </div>
 </div>
 
@@ -106,51 +118,68 @@
         "Fumé bleu 5mm", "Fumé vert 5mm", "Delta 5mm"
     ];
 
+    const spacerTypes = ["Spacer 6mm", "Spacer 8mm", "Spacer 10mm", "Spacer 12mm"];
+
     const tableBody = document.getElementById('tableBody');
     const globalSide1 = document.getElementById('globalSide1');
     const globalSide2 = document.getElementById('globalSide2');
+    const globalSpacer = document.getElementById('globalSpacer');
 
-    function createGlassOptions(selectedType) {
-        return glassTypes.map(type => `<option value="${type}" ${type === selectedType ? 'selected' : ''}>${type}</option>`).join('');
+    function createOptions(array, selectedValue) {
+        return array.map(item => `<option value="${item}" ${item === selectedValue ? 'selected' : ''}>${item}</option>`).join('');
     }
 
-    // إعداد القوائم العامة في الأعلى
     function setupGlobalOptions() {
-        globalSide1.innerHTML = createGlassOptions("Verre clair 4mm");
-        globalSide2.innerHTML = createGlassOptions("Verre clair 4mm");
+        globalSide1.innerHTML = createOptions(glassTypes, "Verre clair 4mm");
+        globalSide2.innerHTML = createOptions(glassTypes, "Verre clair 4mm");
+        globalSpacer.innerHTML = createOptions(spacerTypes, "Spacer 6mm");
     }
 
-    // تطبيق اختيار الزجاج العام على كل الأسطر الحالية
-    function applyGlobalGlass() {
-        const val1 = globalSide1.value;
-        const val2 = globalSide2.value;
+    // تغيير الخيارات العامة يطبق فوراً على جميع الأسطر
+    function applyGlobalSettings() {
+        const v1 = globalSide1.value;
+        const v2 = globalSide2.value;
+        const sp = globalSpacer.value;
 
         const rows = tableBody.querySelectorAll('tr');
         rows.forEach(row => {
-            row.querySelector('.glass-side1').value = val1;
-            row.querySelector('.glass-side2').value = val2;
+            row.querySelector('.glass-side1').value = v1;
+            row.querySelector('.glass-side2').value = v2;
+            row.querySelector('.spacer-type').value = sp;
         });
     }
 
-    // إضافة صف جديد (يأخذ تلقائياً الخيار المحدد في الأعلى)
     function addNewRow(height = '', width = '', quantity = 1) {
         const rowCount = tableBody.rows.length + 1;
         const row = document.createElement('tr');
         
-        const currentGlobal1 = globalSide1.value || "Verre clair 4mm";
-        const currentGlobal2 = globalSide2.value || "Verre clair 4mm";
+        const current1 = globalSide1.value || "Verre clair 4mm";
+        const current2 = globalSide2.value || "Verre clair 4mm";
+        const currentSp = globalSpacer.value || "Spacer 6mm";
 
         row.innerHTML = `
             <td>${rowCount}</td>
-            <td><input type="number" step="any" class="input-height" value="${height}" placeholder="0"></td>
-            <td><input type="number" step="any" class="input-width" value="${width}" placeholder="0"></td>
-            <td><input type="number" class="input-qty" value="${quantity}" min="1"></td>
-            <td><select class="glass-side1">${createGlassOptions(currentGlobal1)}</select></td>
-            <td><select class="glass-side2">${createGlassOptions(currentGlobal2)}</select></td>
+            <td><input type="number" step="any" class="input-height" value="${height}" placeholder="0" oninput="updateRowPerimeter(this)"></td>
+            <td><input type="number" step="any" class="input-width" value="${width}" placeholder="0" oninput="updateRowPerimeter(this)"></td>
+            <td><input type="number" class="input-qty" value="${quantity}" min="1" oninput="updateRowPerimeter(this)"></td>
+            <td><select class="glass-side1">${createOptions(glassTypes, current1)}</select></td>
+            <td><select class="spacer-type">${createOptions(spacerTypes, currentSp)}</select></td>
+            <td><select class="glass-side2">${createOptions(glassTypes, current2)}</select></td>
+            <td><span class="row-perimeter">0.00</span></td>
             <td><button class="btn-danger" onclick="removeRow(this)">✕</button></td>
         `;
         tableBody.appendChild(row);
         updateRowNumbers();
+    }
+
+    function updateRowPerimeter(element) {
+        const row = element.closest('tr');
+        const h = parseFloat(row.querySelector('.input-height').value) || 0;
+        const w = parseFloat(row.querySelector('.input-width').value) || 0;
+        const q = parseInt(row.querySelector('.input-qty').value) || 0;
+
+        const perimeter = ((h + w) * 2 / 100) * q;
+        row.querySelector('.row-perimeter').innerText = perimeter.toFixed(2);
     }
 
     function removeRow(btn) {
@@ -171,6 +200,7 @@
     function calculateTotalArea() {
         let grandTotalGlassArea = 0;
         const glassSummary = {};
+        const spacerSummary = {};
 
         const rows = tableBody.querySelectorAll('tr');
 
@@ -181,11 +211,15 @@
             
             const side1 = row.querySelector('.glass-side1').value;
             const side2 = row.querySelector('.glass-side2').value;
+            const spacer = row.querySelector('.spacer-type').value;
 
             const singleGlassArea = (h / 100) * (w / 100) * q;
+            const perimeterMeter = ((h + w) * 2 / 100) * q;
 
             glassSummary[side1] = (glassSummary[side1] || 0) + singleGlassArea;
             glassSummary[side2] = (glassSummary[side2] || 0) + singleGlassArea;
+
+            spacerSummary[spacer] = (spacerSummary[spacer] || 0) + perimeterMeter;
 
             grandTotalGlassArea += (singleGlassArea * 2);
         });
@@ -194,11 +228,18 @@
 
         const glassDetailsList = document.getElementById('glassDetails');
         glassDetailsList.innerHTML = '';
-
         for (const [type, area] of Object.entries(glassSummary)) {
             const li = document.createElement('li');
             li.innerHTML = `<span>${type}</span> <strong>${area.toFixed(2)} م²</strong>`;
             glassDetailsList.appendChild(li);
+        }
+
+        const spacerDetailsList = document.getElementById('spacerDetails');
+        spacerDetailsList.innerHTML = '';
+        for (const [sp, len] of Object.entries(spacerSummary)) {
+            const li = document.createElement('li');
+            li.innerHTML = `<span>${sp}</span> <strong>${len.toFixed(2)} متر طولي (m)</strong>`;
+            spacerDetailsList.appendChild(li);
         }
 
         document.getElementById('summaryBox').style.display = 'block';
