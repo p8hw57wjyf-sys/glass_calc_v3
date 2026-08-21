@@ -19,7 +19,6 @@
         .btn-save-order { background: #17a2b8; margin-top: 10px; }
         .btn-save-order:hover { background: #138496; }
         .btn-danger { background: #dc3545; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; }
-        .btn-info { background: #007bff; color: white; border: none; padding: 4px 8px; border-radius: 4px; cursor: pointer; font-size: 12px; }
         .btn-reset { background: #6c757d; width: auto; padding: 6px 12px; font-size: 12px; }
         
         input[type="text"], input[type="number"], input[type="date"], select { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-size: 14px; text-align: center; }
@@ -240,19 +239,20 @@
 
     const spacerTypes = ["Spacer 6mm", "Spacer 8mm", "Spacer 10mm", "Spacer 12mm"];
 
-    let prices = JSON.parse(localStorage.getItem('glass_calculator_prices_v2')) || {
+    // استرجاع الأسعار المحفوظة مسبقاً أو تهيئة الكائن الفارغ
+    let prices = JSON.parse(localStorage.getItem('glass_calculator_prices_v3')) || {
         tous_fourni: { glass: {}, spacer: {}, gas: { "Avec Gaz": 0 } },
         prestation: { glass: {}, spacer: {}, gas: { "Avec Gaz": 0 } },
         demi_prestation: { glass: {}, spacer: {}, gas: { "Avec Gaz": 0 } }
     };
 
-    let savedOrders = JSON.parse(localStorage.getItem('glass_calculator_orders')) || [];
+    let savedOrders = JSON.parse(localStorage.getItem('glass_calculator_orders_v3')) || [];
     let lastCalculatedData = null;
 
     function savePricesToStorage() {
-        localStorage.setItem('glass_calculator_prices_v2', JSON.stringify(prices));
+        localStorage.setItem('glass_calculator_prices_v3', JSON.stringify(prices));
         const status = document.getElementById('saveStatus');
-        status.innerText = '✅ تم الحفظ!';
+        status.innerText = '✅ تم حفظ الأسعار!';
         setTimeout(() => { status.innerText = '💾 تحفظ تلقائيًا'; }, 1500);
     }
 
@@ -268,36 +268,48 @@
         priceTbody.innerHTML = '';
 
         glassTypes.forEach(g => {
+            const tfVal = (prices.tous_fourni && prices.tous_fourni.glass && prices.tous_fourni.glass[g] !== undefined) ? prices.tous_fourni.glass[g] : '';
+            const prVal = (prices.prestation && prices.prestation.glass && prices.prestation.glass[g] !== undefined) ? prices.prestation.glass[g] : '';
+            const dpVal = (prices.demi_prestation && prices.demi_prestation.glass && prices.demi_prestation.glass[g] !== undefined) ? prices.demi_prestation.glass[g] : '';
+
             const tr = document.createElement('tr');
             tr.innerHTML = `
                 <td style="text-align: right; font-weight: bold;">${g}</td>
                 <td>م²</td>
-                <td><input type="number" step="any" class="price-input" value="${prices.tous_fourni.glass[g] || ''}" onchange="updatePrice('tous_fourni', 'glass', '${g}', this.value)" placeholder="0.00"></td>
-                <td><input type="number" step="any" class="price-input" value="${prices.prestation.glass ? (prices.prestation.glass[g] || '') : ''}" onchange="updatePrice('prestation', 'glass', '${g}', this.value)" placeholder="افتراضي"></td>
-                <td><input type="number" step="any" class="price-input" value="${prices.demi_prestation.glass[g] || ''}" onchange="updatePrice('demi_prestation', 'glass', '${g}', this.value)" placeholder="0.00"></td>
+                <td><input type="number" step="any" class="price-input" value="${tfVal}" oninput="updatePrice('tous_fourni', 'glass', '${g}', this.value)" placeholder="0.00"></td>
+                <td><input type="number" step="any" class="price-input" value="${prVal}" oninput="updatePrice('prestation', 'glass', '${g}', this.value)" placeholder="0.00"></td>
+                <td><input type="number" step="any" class="price-input" value="${dpVal}" oninput="updatePrice('demi_prestation', 'glass', '${g}', this.value)" placeholder="0.00"></td>
             `;
             priceTbody.appendChild(tr);
         });
 
         spacerTypes.forEach(sp => {
+            const tfVal = (prices.tous_fourni && prices.tous_fourni.spacer && prices.tous_fourni.spacer[sp] !== undefined) ? prices.tous_fourni.spacer[sp] : '';
+            const prVal = (prices.prestation && prices.prestation.spacer && prices.prestation.spacer[sp] !== undefined) ? prices.prestation.spacer[sp] : '';
+            const dpVal = (prices.demi_prestation && prices.demi_prestation.spacer && prices.demi_prestation.spacer[sp] !== undefined) ? prices.demi_prestation.spacer[sp] : '';
+
             const tr = document.createElement('tr');
             tr.innerHTML = `
                 <td style="text-align: right; font-weight: bold;">${sp}</td>
                 <td>متر طولي</td>
-                <td><input type="number" step="any" class="price-input" value="${prices.tous_fourni.spacer[sp] || ''}" onchange="updatePrice('tous_fourni', 'spacer', '${sp}', this.value)" placeholder="0.00"></td>
-                <td><input type="number" step="any" class="price-input" value="${prices.prestation.spacer[sp] || ''}" onchange="updatePrice('prestation', 'spacer', '${sp}', this.value)" placeholder="0.00"></td>
-                <td><input type="number" step="any" class="price-input" value="${prices.demi_prestation.spacer[sp] || ''}" onchange="updatePrice('demi_prestation', 'spacer', '${sp}', this.value)" placeholder="0.00"></td>
+                <td><input type="number" step="any" class="price-input" value="${tfVal}" oninput="updatePrice('tous_fourni', 'spacer', '${sp}', this.value)" placeholder="0.00"></td>
+                <td><input type="number" step="any" class="price-input" value="${prVal}" oninput="updatePrice('prestation', 'spacer', '${sp}', this.value)" placeholder="0.00"></td>
+                <td><input type="number" step="any" class="price-input" value="${dpVal}" oninput="updatePrice('demi_prestation', 'spacer', '${sp}', this.value)" placeholder="0.00"></td>
             `;
             priceTbody.appendChild(tr);
         });
+
+        const tfGas = (prices.tous_fourni && prices.tous_fourni.gas && prices.tous_fourni.gas['Avec Gaz'] !== undefined) ? prices.tous_fourni.gas['Avec Gaz'] : '';
+        const prGas = (prices.prestation && prices.prestation.gas && prices.prestation.gas['Avec Gaz'] !== undefined) ? prices.prestation.gas['Avec Gaz'] : '';
+        const dpGas = (prices.demi_prestation && prices.demi_prestation.gas && prices.demi_prestation.gas['Avec Gaz'] !== undefined) ? prices.demi_prestation.gas['Avec Gaz'] : '';
 
         const trGas = document.createElement('tr');
         trGas.innerHTML = `
             <td style="text-align: right; font-weight: bold;">حقن غاز الأرجون (Avec Gaz)</td>
             <td>م²</td>
-            <td><input type="number" step="any" class="price-input" value="${prices.tous_fourni.gas['Avec Gaz'] || ''}" onchange="updatePrice('tous_fourni', 'gas', 'Avec Gaz', this.value)" placeholder="0.00"></td>
-            <td><input type="number" step="any" class="price-input" value="${prices.prestation.gas['Avec Gaz'] || ''}" onchange="updatePrice('prestation', 'gas', 'Avec Gaz', this.value)" placeholder="0.00"></td>
-            <td><input type="number" step="any" class="price-input" value="${prices.demi_prestation.gas['Avec Gaz'] || ''}" onchange="updatePrice('demi_prestation', 'gas', 'Avec Gaz', this.value)" placeholder="0.00"></td>
+            <td><input type="number" step="any" class="price-input" value="${tfGas}" oninput="updatePrice('tous_fourni', 'gas', 'Avec Gaz', this.value)" placeholder="0.00"></td>
+            <td><input type="number" step="any" class="price-input" value="${prGas}" oninput="updatePrice('prestation', 'gas', 'Avec Gaz', this.value)" placeholder="0.00"></td>
+            <td><input type="number" step="any" class="price-input" value="${dpGas}" oninput="updatePrice('demi_prestation', 'gas', 'Avec Gaz', this.value)" placeholder="0.00"></td>
         `;
         priceTbody.appendChild(trGas);
     }
@@ -447,6 +459,8 @@
                 glassSummary[side2] = (glassSummary[side2] || 0) + unitArea;
             } else if (serviceMode === 'demi_prestation') {
                 glassSummary[side1] = (glassSummary[side1] || 0) + unitArea;
+            } else if (serviceMode === 'prestation') {
+                // Prestation: الزجاج من عند الزبون، لذا لا يتم حساب تكلفة الزجاج هنا
             }
 
             spacerSummary[spacer] = (spacerSummary[spacer] || 0) + perimeterMeter;
@@ -475,7 +489,7 @@
         } else {
             const glassPrices = prices[serviceMode]?.glass || {};
             for (const [type, area] of Object.entries(glassSummary)) {
-                const unitPrice = glassPrices[type] || prices.tous_fourni.glass[type] || 0;
+                const unitPrice = glassPrices[type] || 0;
                 const cost = area * unitPrice;
                 grandTotalPrice += cost;
 
@@ -491,10 +505,7 @@
             extraGlassDetailsList.innerHTML = '<li><span>لا توجد قطع زجاج منفصلة مضافة</span> <strong>0.00</strong></li>';
         } else {
             for (const [type, area] of Object.entries(extraGlassSummary)) {
-                let unitPrice = (prices[serviceMode]?.glass && prices[serviceMode].glass[type]) 
-                    ? prices[serviceMode].glass[type] 
-                    : (prices.tous_fourni.glass[type] || 0);
-
+                let unitPrice = (prices[serviceMode]?.glass && prices[serviceMode].glass[type]) ? prices[serviceMode].glass[type] : 0;
                 const cost = area * unitPrice;
                 grandTotalPrice += cost;
 
@@ -508,7 +519,7 @@
         spacerDetailsList.innerHTML = '';
         const spacerPrices = prices[serviceMode]?.spacer || {};
         for (const [sp, len] of Object.entries(spacerSummary)) {
-            const unitPrice = spacerPrices[sp] || prices.tous_fourni.spacer[sp] || 0;
+            const unitPrice = spacerPrices[sp] || 0;
             const cost = len * unitPrice;
             grandTotalPrice += cost;
 
@@ -523,7 +534,7 @@
         for (const [gOpt, area] of Object.entries(gasSummary)) {
             let unitPrice = 0;
             if (gOpt === "Avec Gaz") {
-                unitPrice = gasPrices['Avec Gaz'] || prices.tous_fourni.gas['Avec Gaz'] || 0;
+                unitPrice = gasPrices['Avec Gaz'] || 0;
             }
             const cost = area * unitPrice;
             grandTotalPrice += cost;
@@ -542,7 +553,6 @@
         };
     }
 
-    // --- حفظ واسترجاع الطلبيات ---
     function saveCurrentOrder() {
         if (!lastCalculatedData) {
             alert('الرجاء حساب الطلبية أولاً قبل حفظها!');
@@ -563,7 +573,7 @@
         };
 
         savedOrders.push(orderObj);
-        localStorage.setItem('glass_calculator_orders', JSON.stringify(savedOrders));
+        localStorage.setItem('glass_calculator_orders_v3', JSON.stringify(savedOrders));
         renderOrderHistory();
         alert('✅ تم حفظ الطلبية في السجل بنجاح!');
     }
@@ -603,7 +613,7 @@
     function deleteOrder(id) {
         if (confirm('هل أنت تأكد من حذف هذه الطلبية من السجل؟')) {
             savedOrders = savedOrders.filter(o => o.id !== id);
-            localStorage.setItem('glass_calculator_orders', JSON.stringify(savedOrders));
+            localStorage.setItem('glass_calculator_orders_v3', JSON.stringify(savedOrders));
             renderOrderHistory();
         }
     }
@@ -611,7 +621,7 @@
     function clearAllOrders() {
         if (confirm('هل أنت تأكد من مسح جميع الطلبيات المحفوظة؟')) {
             savedOrders = [];
-            localStorage.setItem('glass_calculator_orders', JSON.stringify(savedOrders));
+            localStorage.setItem('glass_calculator_orders_v3', JSON.stringify(savedOrders));
             renderOrderHistory();
         }
     }
