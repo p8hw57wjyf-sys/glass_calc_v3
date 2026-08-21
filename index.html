@@ -279,7 +279,6 @@
         "Baguette blanche 8/10", "Baguette gris 8/10", "Baguette chromé 8/10", "Baguette dorée 8/10", "Baguette gris souris 8/10"
     ];
 
-    // خريطة لربط كل Baguette بـ Rosas المقابل لها تلقائياً
     const baguetteToRosasMap = {
         "Baguette blanche 8/18": "Rosas blanche 8/18",
         "Baguette gris 8/18": "Rosas gris 8/18",
@@ -293,17 +292,18 @@
         "Baguette gris souris 8/10": "Rosas gris souris 8/10"
     };
 
-    let prices = JSON.parse(localStorage.getItem('glass_calculator_prices_v6')) || {
+    // تهيئة الأسعار مع ضمان وجود كافة الكائنات الفرعية لمنع الأخطاء
+    let prices = JSON.parse(localStorage.getItem('glass_calculator_prices_v7')) || {
         tous_fourni: { glass: {}, spacer: {}, baguette: {}, rosas: {}, gas: { "Avec Gaz": 0 } },
         prestation: { glass: {}, spacer: {}, baguette: {}, rosas: {}, gas: { "Avec Gaz": 0 } },
         demi_prestation: { glass: {}, spacer: {}, baguette: {}, rosas: {}, gas: { "Avec Gaz": 0 } }
     };
 
-    let savedOrders = JSON.parse(localStorage.getItem('glass_calculator_orders_v6')) || [];
+    let savedOrders = JSON.parse(localStorage.getItem('glass_calculator_orders_v7')) || [];
     let lastCalculatedData = null;
 
     function savePricesToStorage() {
-        localStorage.setItem('glass_calculator_prices_v6', JSON.stringify(prices));
+        localStorage.setItem('glass_calculator_prices_v7', JSON.stringify(prices));
         const status = document.getElementById('saveStatus');
         status.innerText = '✅ تم حفظ الأسعار!';
         setTimeout(() => { status.innerText = '💾 تحفظ تلقائيًا'; }, 1500);
@@ -372,7 +372,6 @@
             priceTbody.appendChild(tr);
         });
 
-        // إضافة أسعار الـ Rosas بالقطعة
         Object.values(baguetteToRosasMap).forEach(rs => {
             const tfVal = prices.tous_fourni?.rosas?.[rs] ?? '';
             const prVal = prices.prestation?.rosas?.[rs] ?? '';
@@ -587,7 +586,6 @@
             spacerSummary[spacer] = (spacerSummary[spacer] || 0) + perimeterMeter;
             gasSummary[gas] = (gasSummary[gas] || 0) + unitArea;
 
-            // حساب أمتار Baguette
             if (baguetteType !== "بدون Baguette" && (bgVCount > 0 || bgHCount > 0)) {
                 const verticalMetersPerUnit = (h / 1000) * bgVCount;
                 const horizontalMetersPerUnit = (w / 1000) * bgHCount;
@@ -595,7 +593,6 @@
                 
                 baguetteSummary[baguetteType] = (baguetteSummary[baguetteType] || 0) + totalBaguettePerItem;
 
-                // حساب الـ Rosas تلقائياً بناءً على التقاطعات (| × _) عند التفعيل
                 if (isRosasActive && bgVCount > 0 && bgHCount > 0) {
                     const rosasKey = baguetteToRosasMap[baguetteType];
                     if (rosasKey) {
@@ -622,7 +619,6 @@
 
         document.getElementById('totalAreaText').innerText = `إجمالي المساحة الفعلية للزجاج المزدوج: ${grandTotalGlassArea.toFixed(2)} م²`;
 
-        // تفاصيل الزجاج
         const glassDetailsList = document.getElementById('glassDetails');
         glassDetailsList.innerHTML = '';
         if (serviceMode === 'prestation') {
@@ -640,7 +636,6 @@
             }
         }
 
-        // قطع الزجاج المنفصلة
         const extraGlassDetailsList = document.getElementById('extraGlassDetails');
         extraGlassDetailsList.innerHTML = '';
         if (Object.keys(extraGlassSummary).length === 0) {
@@ -657,7 +652,6 @@
             }
         }
 
-        // تفاصيل الفواصل Spacer
         const spacerDetailsList = document.getElementById('spacerDetails');
         spacerDetailsList.innerHTML = '';
         const spacerPrices = prices[serviceMode]?.spacer || {};
@@ -671,7 +665,6 @@
             spacerDetailsList.appendChild(li);
         }
 
-        // تفاصيل شرائط الديكور Baguette
         const baguetteDetailsList = document.getElementById('baguetteDetails');
         baguetteDetailsList.innerHTML = '';
         const baguettePrices = prices[serviceMode]?.baguette || {};
@@ -689,7 +682,6 @@
             }
         }
 
-        // تفاصيل الورود Rosas
         const rosasDetailsList = document.getElementById('rosasDetails');
         rosasDetailsList.innerHTML = '';
         const rosasPrices = prices[serviceMode]?.rosas || {};
@@ -707,7 +699,6 @@
             }
         }
 
-        // تفاصيل الغاز
         const gasDetailsList = document.getElementById('gasDetails');
         gasDetailsList.innerHTML = '';
         const gasPrices = prices[serviceMode]?.gas || {};
@@ -753,7 +744,7 @@
         };
 
         savedOrders.push(orderObj);
-        localStorage.setItem('glass_calculator_orders_v6', JSON.stringify(savedOrders));
+        localStorage.setItem('glass_calculator_orders_v7', JSON.stringify(savedOrders));
         renderOrderHistory();
         alert('✅ تم حفظ الطلبية في السجل بنجاح!');
     }
@@ -793,7 +784,7 @@
     function deleteOrder(id) {
         if (confirm('هل أنت تأكد من حذف هذه الطلبية من السجل؟')) {
             savedOrders = savedOrders.filter(o => o.id !== id);
-            localStorage.setItem('glass_calculator_orders_v6', JSON.stringify(savedOrders));
+            localStorage.setItem('glass_calculator_orders_v7', JSON.stringify(savedOrders));
             renderOrderHistory();
         }
     }
@@ -801,7 +792,7 @@
     function clearAllOrders() {
         if (confirm('هل أنت تأكد من مسح جميع الطلبيات المحفوظة؟')) {
             savedOrders = [];
-            localStorage.setItem('glass_calculator_orders_v6', JSON.stringify(savedOrders));
+            localStorage.setItem('glass_calculator_orders_v7', JSON.stringify(savedOrders));
             renderOrderHistory();
         }
     }
