@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>حاسبة طلبيات الزجاج المزدوج والأسعار</title>
+    <title>نظام إدارة وتكلفة طلبيات الزجاج المزدوج والديكور</title>
     <style>
         body { font-family: system-ui, sans-serif; padding: 15px; background: #f0f2f5; color: #1c1e21; }
-        .container { max-width: 1200px; margin: auto; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .container { max-width: 1250px; margin: auto; background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
         h2 { text-align: center; color: #1877f2; margin-bottom: 15px; }
 
         .btn { display: block; width: 100%; padding: 12px; color: white; border: none; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; text-align: center; }
@@ -21,7 +21,7 @@
         .btn-danger { background: #dc3545; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; }
         .btn-reset { background: #6c757d; width: auto; padding: 6px 12px; font-size: 12px; }
         
-        input[type="text"], input[type="number"], input[type="date"], select { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-size: 14px; text-align: center; }
+        input[type="text"], input[type="number"], input[type="date"], select { width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; font-size: 13px; text-align: center; }
 
         .header-info { background: #e7f3ff; padding: 15px; border-radius: 8px; margin-bottom: 15px; }
         .info-row { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 10px; }
@@ -37,9 +37,9 @@
         .history-section h3 { margin: 0 0 10px 0; color: #343a40; font-size: 16px; display: flex; justify-content: space-between; align-items: center; }
 
         .table-responsive { overflow-x: auto; }
-        table { width: 100%; border-collapse: collapse; margin-top: 15px; min-width: 1050px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; min-width: 1100px; }
         th, td { border: 1px solid #ddd; padding: 8px; text-align: center; }
-        th { background-color: #f8f9fa; color: #333; }
+        th { background-color: #f8f9fa; color: #333; font-size: 13px; }
         
         .summary-box { background: #f8f9fa; border: 2px dashed #1877f2; padding: 15px; border-radius: 8px; margin-top: 20px; display: none; }
         .summary-title { font-size: 18px; font-weight: bold; color: #1877f2; margin-bottom: 10px; text-align: center; }
@@ -50,18 +50,19 @@
         .prices-section { margin-top: 30px; border-top: 2px solid #e7f3ff; padding-top: 15px; }
         .prices-section h3 { margin: 0 0 10px 0; color: #333; font-size: 16px; display: flex; justify-content: space-between; align-items: center; }
         .price-table { min-width: 100% !important; margin-top: 5px; }
-        .price-table th, .price-table td { padding: 4px 6px; font-size: 13px; }
-        .price-input { width: 80px !important; padding: 4px !important; font-size: 13px !important; height: 28px; display: inline-block; }
+        .price-table th, .price-table td { padding: 5px 8px; font-size: 13px; }
+        .price-input { width: 85px !important; padding: 4px !important; font-size: 13px !important; height: 28px; display: inline-block; }
         .status-badge { font-weight: normal; padding: 2px 6px; background: #28a745; color: white; border-radius: 4px; font-size: 11px; }
         .service-type-select { background: #fff3cd; border: 1px solid #ffeeba; font-weight: bold; }
-        .baguette-config { display: flex; gap: 4px; justify-content: center; }
-        .baguette-config input { width: 45px !important; padding: 4px !important; }
+        .baguette-config { display: flex; gap: 3px; justify-content: center; }
+        .baguette-config input { width: 38px !important; padding: 4px !important; }
+        .rosas-toggle-box { display: flex; align-items: center; justify-content: center; gap: 4px; font-size: 12px; font-weight: bold; color: #555; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2>نظام إدارة وتكلفة طلبيات الزجاج المزدوج</h2>
+    <h2>نظام إدارة وتكلفة طلبيات الزجاج المزدوج والديكور</h2>
 
     <div class="header-info">
         <div class="info-row">
@@ -106,10 +107,17 @@
                     <select id="globalBaguetteType" onchange="applyGlobalSettings()"></select>
                 </div>
                 <div>
-                    <small>شكل (| و _):</small>
-                    <div style="display: flex; gap: 4px;">
+                    <small>الشكل (| و _):</small>
+                    <div style="display: flex; gap: 3px;">
                         <input type="number" id="globalBaguetteV" value="0" min="0" placeholder="|" title="عدد خطوط الطول |" oninput="applyGlobalSettings()">
                         <input type="number" id="globalBaguetteH" value="0" min="0" placeholder="_" title="عدد خطوط العرض _" oninput="applyGlobalSettings()">
+                    </div>
+                </div>
+                <div>
+                    <small>تفعيل الوردة (Rosas):</small>
+                    <div class="rosas-toggle-box" style="margin-top: 4px;">
+                        <input type="checkbox" id="globalRosasActive" onchange="applyGlobalSettings()" style="width: 18px; height: 18px; cursor: pointer;">
+                        <span>تفعيل Rosas</span>
                     </div>
                 </div>
                 <div>
@@ -125,15 +133,16 @@
             <thead>
                 <tr>
                     <th style="width: 3%;">#</th>
-                    <th style="width: 8%;">الارتفاع (مم)</th>
-                    <th style="width: 8%;">العرض (مم)</th>
-                    <th style="width: 5%;">الكمية</th>
-                    <th style="width: 13%;">الجهة 1 (الخارجية)</th>
-                    <th style="width: 9%;">الفاصل</th>
-                    <th style="width: 9%;">الغاز</th>
+                    <th style="width: 7%;">الارتفاع (مم)</th>
+                    <th style="width: 7%;">العرض (مم)</th>
+                    <th style="width: 4%;">الكمية</th>
+                    <th style="width: 12%;">الجهة 1 (الخارجية)</th>
+                    <th style="width: 8%;">الفاصل</th>
+                    <th style="width: 8%;">الغاز</th>
                     <th style="width: 13%;">نوع Baguette</th>
-                    <th style="width: 9%;">الشكل (| و _)</th>
-                    <th style="width: 13%;">الجهة 2 (الداخلية)</th>
+                    <th style="width: 8%;">الشكل (| و _)</th>
+                    <th style="width: 8%;">Rosas</th>
+                    <th style="width: 12%;">الجهة 2 (الداخلية)</th>
                     <th style="width: 6%;">المحيط (م)</th>
                     <th style="width: 4%;">حذف</th>
                 </tr>
@@ -193,6 +202,11 @@
 
         <hr style="border: 0.5px solid #ddd; margin: 15px 0;">
         
+        <strong style="display: block; margin-bottom: 8px;">تفصيل قطع الورود (Rosas) حسب التقاطعات:</strong>
+        <ul class="summary-list" id="rosasDetails"></ul>
+
+        <hr style="border: 0.5px solid #ddd; margin: 15px 0;">
+        
         <strong style="display: block; margin-bottom: 8px;">تفصيل حقن الغاز (Gaz):</strong>
         <ul class="summary-list" id="gasDetails"></ul>
 
@@ -235,7 +249,7 @@
                 <thead>
                     <tr>
                         <th style="text-align: right;">النوع / البيان</th>
-                        <th style="width: 80px;">الوحدة</th>
+                        <th style="width: 75px;">الوحدة</th>
                         <th>Tous fourni<br><small>(سعر كامل)</small></th>
                         <th>Prestation<br><small>(سعر الزجاج إضافي)</small></th>
                         <th>Demi prestation<br><small>(جهة من عندي)</small></th>
@@ -258,19 +272,38 @@
     ];
 
     const spacerTypes = ["Spacer 6mm", "Spacer 8mm", "Spacer 10mm", "Spacer 12mm"];
-    const baguetteTypes = ["بدون Baguette", "Baguette أبيض", "Baguette ذهبي", "Baguette خشبي", "Baguette أسود"];
+    
+    const baguetteTypes = [
+        "بدون Baguette",
+        "Baguette blanche 8/18", "Baguette gris 8/18", "Baguette chromé 8/18", "Baguette dorée 8/18", "Baguette gris souris 8/18",
+        "Baguette blanche 8/10", "Baguette gris 8/10", "Baguette chromé 8/10", "Baguette dorée 8/10", "Baguette gris souris 8/10"
+    ];
 
-    let prices = JSON.parse(localStorage.getItem('glass_calculator_prices_v5')) || {
-        tous_fourni: { glass: {}, spacer: {}, baguette: {}, gas: { "Avec Gaz": 0 } },
-        prestation: { glass: {}, spacer: {}, baguette: {}, gas: { "Avec Gaz": 0 } },
-        demi_prestation: { glass: {}, spacer: {}, baguette: {}, gas: { "Avec Gaz": 0 } }
+    // خريطة لربط كل Baguette بـ Rosas المقابل لها تلقائياً
+    const baguetteToRosasMap = {
+        "Baguette blanche 8/18": "Rosas blanche 8/18",
+        "Baguette gris 8/18": "Rosas gris 8/18",
+        "Baguette chromé 8/18": "Rosas chromé 8/18",
+        "Baguette dorée 8/18": "Rosas dorée 8/18",
+        "Baguette gris souris 8/18": "Rosas gris souris 8/18",
+        "Baguette blanche 8/10": "Rosas blanche 8/10",
+        "Baguette gris 8/10": "Rosas gris 8/10",
+        "Baguette chromé 8/10": "Rosas chromé 8/10",
+        "Baguette dorée 8/10": "Rosas dorée 8/10",
+        "Baguette gris souris 8/10": "Rosas gris souris 8/10"
     };
 
-    let savedOrders = JSON.parse(localStorage.getItem('glass_calculator_orders_v5')) || [];
+    let prices = JSON.parse(localStorage.getItem('glass_calculator_prices_v6')) || {
+        tous_fourni: { glass: {}, spacer: {}, baguette: {}, rosas: {}, gas: { "Avec Gaz": 0 } },
+        prestation: { glass: {}, spacer: {}, baguette: {}, rosas: {}, gas: { "Avec Gaz": 0 } },
+        demi_prestation: { glass: {}, spacer: {}, baguette: {}, rosas: {}, gas: { "Avec Gaz": 0 } }
+    };
+
+    let savedOrders = JSON.parse(localStorage.getItem('glass_calculator_orders_v6')) || [];
     let lastCalculatedData = null;
 
     function savePricesToStorage() {
-        localStorage.setItem('glass_calculator_prices_v5', JSON.stringify(prices));
+        localStorage.setItem('glass_calculator_prices_v6', JSON.stringify(prices));
         const status = document.getElementById('saveStatus');
         status.innerText = '✅ تم حفظ الأسعار!';
         setTimeout(() => { status.innerText = '💾 تحفظ تلقائيًا'; }, 1500);
@@ -285,6 +318,7 @@
     const globalBaguetteType = document.getElementById('globalBaguetteType');
     const globalBaguetteV = document.getElementById('globalBaguetteV');
     const globalBaguetteH = document.getElementById('globalBaguetteH');
+    const globalRosasActive = document.getElementById('globalRosasActive');
 
     function initPriceTable() {
         const priceTbody = document.getElementById('priceTableBody');
@@ -338,6 +372,23 @@
             priceTbody.appendChild(tr);
         });
 
+        // إضافة أسعار الـ Rosas بالقطعة
+        Object.values(baguetteToRosasMap).forEach(rs => {
+            const tfVal = prices.tous_fourni?.rosas?.[rs] ?? '';
+            const prVal = prices.prestation?.rosas?.[rs] ?? '';
+            const dpVal = prices.demi_prestation?.rosas?.[rs] ?? '';
+
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td style="text-align: right; font-weight: bold; color: #c69500;">وردة ${rs}</td>
+                <td>قطعة</td>
+                <td><input type="number" step="any" class="price-input" value="${tfVal}" oninput="updatePrice('tous_fourni', 'rosas', '${rs}', this.value)" placeholder="0.00"></td>
+                <td><input type="number" step="any" class="price-input" value="${prVal}" oninput="updatePrice('prestation', 'rosas', '${rs}', this.value)" placeholder="0.00"></td>
+                <td><input type="number" step="any" class="price-input" value="${dpVal}" oninput="updatePrice('demi_prestation', 'rosas', '${rs}', this.value)" placeholder="0.00"></td>
+            `;
+            priceTbody.appendChild(tr);
+        });
+
         const tfGas = prices.tous_fourni?.gas?.['Avec Gaz'] ?? '';
         const prGas = prices.prestation?.gas?.['Avec Gaz'] ?? '';
         const dpGas = prices.demi_prestation?.gas?.['Avec Gaz'] ?? '';
@@ -363,9 +414,9 @@
     function resetPrices() {
         if (confirm('هل أنت تأكد من رغبتك في تصفير جميع الأسعار؟')) {
             prices = {
-                tous_fourni: { glass: {}, spacer: {}, baguette: {}, gas: { "Avec Gaz": 0 } },
-                prestation: { glass: {}, spacer: {}, baguette: {}, gas: { "Avec Gaz": 0 } },
-                demi_prestation: { glass: {}, spacer: {}, baguette: {}, gas: { "Avec Gaz": 0 } }
+                tous_fourni: { glass: {}, spacer: {}, baguette: {}, rosas: {}, gas: { "Avec Gaz": 0 } },
+                prestation: { glass: {}, spacer: {}, baguette: {}, rosas: {}, gas: { "Avec Gaz": 0 } },
+                demi_prestation: { glass: {}, spacer: {}, baguette: {}, rosas: {}, gas: { "Avec Gaz": 0 } }
             };
             savePricesToStorage();
             initPriceTable();
@@ -391,6 +442,7 @@
         const bgType = globalBaguetteType.value;
         const bgV = globalBaguetteV.value;
         const bgH = globalBaguetteH.value;
+        const rosasChecked = globalRosasActive.checked;
 
         const rows = tableBody.querySelectorAll('tr');
         rows.forEach(row => {
@@ -401,11 +453,12 @@
             row.querySelector('.baguette-type').value = bgType;
             row.querySelector('.baguette-v').value = bgV;
             row.querySelector('.baguette-h').value = bgH;
+            row.querySelector('.rosas-checkbox').checked = rosasChecked;
             updateRowPerimeter(row.querySelector('.input-height'));
         });
     }
 
-    function addNewRow(height = '', width = '', quantity = '', bgV = '', bgH = '') {
+    function addNewRow(height = '', width = '', quantity = '', bgV = '', bgH = '', rosasChecked = false) {
         const rowCount = tableBody.rows.length + 1;
         const row = document.createElement('tr');
         
@@ -416,6 +469,7 @@
         const currentBgType = globalBaguetteType.value || "بدون Baguette";
         const currentV = bgV !== '' ? bgV : (globalBaguetteV.value || 0);
         const currentH = bgH !== '' ? bgH : (globalBaguetteH.value || 0);
+        const currentRosas = rosasChecked !== false ? rosasChecked : globalRosasActive.checked;
 
         row.innerHTML = `
             <td>${rowCount}</td>
@@ -435,6 +489,12 @@
                 <div class="baguette-config">
                     <input type="number" class="baguette-v" value="${currentV}" min="0" placeholder="|" title="عدد خطوط الطول |">
                     <input type="number" class="baguette-h" value="${currentH}" min="0" placeholder="_" title="عدد خطوط العرض _">
+                </div>
+            </td>
+            <td>
+                <div class="rosas-toggle-box">
+                    <input type="checkbox" class="rosas-checkbox" ${currentRosas ? 'checked' : ''} style="width: 16px; height: 16px; cursor: pointer;">
+                    <span style="font-size: 11px;">Rosas</span>
                 </div>
             </td>
             <td><select class="glass-side2">${createOptions(glassTypes, current2)}</select></td>
@@ -496,6 +556,7 @@
         const extraGlassSummary = {};
         const spacerSummary = {};
         const baguetteSummary = {};
+        const rosasSummary = {};
         const gasSummary = {};
 
         const rows = tableBody.querySelectorAll('tr');
@@ -511,6 +572,7 @@
             const baguetteType = row.querySelector('.baguette-type').value;
             const bgVCount = parseInt(row.querySelector('.baguette-v').value) || 0;
             const bgHCount = parseInt(row.querySelector('.baguette-h').value) || 0;
+            const isRosasActive = row.querySelector('.rosas-checkbox').checked;
 
             const unitArea = (h / 1000) * (w / 1000) * q;
             const perimeterMeter = ((h + w) * 2 / 1000) * q;
@@ -525,13 +587,23 @@
             spacerSummary[spacer] = (spacerSummary[spacer] || 0) + perimeterMeter;
             gasSummary[gas] = (gasSummary[gas] || 0) + unitArea;
 
-            // حساب أمتار Baguette بناءً على الرموز | و _ لكل قطعة ثم ضربها في الكمية
+            // حساب أمتار Baguette
             if (baguetteType !== "بدون Baguette" && (bgVCount > 0 || bgHCount > 0)) {
                 const verticalMetersPerUnit = (h / 1000) * bgVCount;
                 const horizontalMetersPerUnit = (w / 1000) * bgHCount;
                 const totalBaguettePerItem = (verticalMetersPerUnit + horizontalMetersPerUnit) * q;
                 
                 baguetteSummary[baguetteType] = (baguetteSummary[baguetteType] || 0) + totalBaguettePerItem;
+
+                // حساب الـ Rosas تلقائياً بناءً على التقاطعات (| × _) عند التفعيل
+                if (isRosasActive && bgVCount > 0 && bgHCount > 0) {
+                    const rosasKey = baguetteToRosasMap[baguetteType];
+                    if (rosasKey) {
+                        const intersectionsPerUnit = bgVCount * bgHCount;
+                        const totalRosasPerItem = intersectionsPerUnit * q;
+                        rosasSummary[rosasKey] = (rosasSummary[rosasKey] || 0) + totalRosasPerItem;
+                    }
+                }
             }
 
             grandTotalGlassArea += (unitArea * 2);
@@ -617,6 +689,24 @@
             }
         }
 
+        // تفاصيل الورود Rosas
+        const rosasDetailsList = document.getElementById('rosasDetails');
+        rosasDetailsList.innerHTML = '';
+        const rosasPrices = prices[serviceMode]?.rosas || {};
+        if (Object.keys(rosasSummary).length === 0) {
+            rosasDetailsList.innerHTML = '<li><span>لا توجد قطع Rosas مستخدمة أو مفعلة</span> <strong>0.00</strong></li>';
+        } else {
+            for (const [rs, count] of Object.entries(rosasSummary)) {
+                const unitPrice = rosasPrices[rs] || 0;
+                const cost = count * unitPrice;
+                grandTotalPrice += cost;
+
+                const li = document.createElement('li');
+                li.innerHTML = `<span>وردة ${rs} (${count} قطعة)</span> <strong>${cost.toFixed(2)}</strong>`;
+                rosasDetailsList.appendChild(li);
+            }
+        }
+
         // تفاصيل الغاز
         const gasDetailsList = document.getElementById('gasDetails');
         gasDetailsList.innerHTML = '';
@@ -663,7 +753,7 @@
         };
 
         savedOrders.push(orderObj);
-        localStorage.setItem('glass_calculator_orders_v5', JSON.stringify(savedOrders));
+        localStorage.setItem('glass_calculator_orders_v6', JSON.stringify(savedOrders));
         renderOrderHistory();
         alert('✅ تم حفظ الطلبية في السجل بنجاح!');
     }
@@ -703,7 +793,7 @@
     function deleteOrder(id) {
         if (confirm('هل أنت تأكد من حذف هذه الطلبية من السجل؟')) {
             savedOrders = savedOrders.filter(o => o.id !== id);
-            localStorage.setItem('glass_calculator_orders_v5', JSON.stringify(savedOrders));
+            localStorage.setItem('glass_calculator_orders_v6', JSON.stringify(savedOrders));
             renderOrderHistory();
         }
     }
@@ -711,7 +801,7 @@
     function clearAllOrders() {
         if (confirm('هل أنت تأكد من مسح جميع الطلبيات المحفوظة؟')) {
             savedOrders = [];
-            localStorage.setItem('glass_calculator_orders_v5', JSON.stringify(savedOrders));
+            localStorage.setItem('glass_calculator_orders_v6', JSON.stringify(savedOrders));
             renderOrderHistory();
         }
     }
